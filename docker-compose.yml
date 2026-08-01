@@ -1,7 +1,22 @@
 services:
-  rezeptbuch:
+  backend:
+    build: ./backend
+    container_name: rezeptbuch-backend
+    restart: unless-stopped
+    environment:
+      - DATA_FILE=/data/recipes.json
+    volumes:
+      - rezeptbuch-data:/data
+
+  frontend:
     build: .
-    container_name: rezeptbuch
+    container_name: rezeptbuch-frontend
     ports:
       - "8080:80"
     restart: unless-stopped
+    depends_on:
+      - backend
+
+volumes:
+  rezeptbuch-data:
+    driver: local

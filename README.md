@@ -1,56 +1,69 @@
-# 📖 Rezeptbuch
+# 🍳 Rezeptbuch
 
-Ein vollständiges Rezeptbuch als Docker-Container mit einer modernen Web-Oberfläche.
+Ein digitales Rezeptbuch als Docker-App mit persistenter Datenspeicherung.
 
-## 🚀 Schnellstart
+## Architektur
 
-### Voraussetzungen
-- Docker & Docker Compose installiert
+```
+┌─────────────────────────────────────────┐
+│  Browser  →  http://localhost:8080       │
+└──────────────────┬──────────────────────┘
+                   │
+        ┌──────────▼──────────┐
+        │  nginx (Frontend)   │
+        │  Port 80 → 8080     │
+        └──────────┬──────────┘
+                   │ /api/*
+        ┌──────────▼──────────┐
+        │  Node.js (Backend)  │
+        │  Port 3001          │
+        └──────────┬──────────┘
+                   │
+        ┌──────────▼──────────┐
+        │  Docker Volume      │
+        │  /data/recipes.json │
+        └─────────────────────┘
+```
 
-### Starten
+## Quickstart
+
 ```bash
 git clone https://github.com/Maesch1/rezeptbuch.git
 cd rezeptbuch
-docker compose up -d
-```
-
-Die App ist danach unter **http://localhost:8080** erreichbar.
-
-### Stoppen
-```bash
-docker compose down
-```
-
-### Rebuild nach Änderungen
-```bash
 docker compose up -d --build
 ```
 
-## 📦 Funktionen
+Danach: **http://localhost:8080**
 
-- ✅ Rezepte erstellen, bearbeiten, löschen
-- ✅ Kategorien (Frühstück, Mittagessen, Abendessen, Dessert, Snacks)
-- ✅ Zutatenliste mit Mengen & Einheiten
-- ✅ Zubereitungsschritte
-- ✅ Suche & Filterung
-- ✅ Daten werden automatisch im Browser gespeichert (localStorage)
-- ✅ Dark / Light Mode
-- ✅ Vollständig responsive (Mobile & Desktop)
+## Datenspeicherung
 
-## 🐳 Docker Image manuell bauen
+- Rezepte werden in `/data/recipes.json` im Docker Volume `rezeptbuch-data` gespeichert
+- Das Volume überlebt Container-Neustarts und Updates
+- Backup: `docker run --rm -v rezeptbuch-data:/data -v $(pwd):/backup alpine tar czf /backup/recipes-backup.tar.gz /data`
+
+## Update
+
 ```bash
-docker build -t rezeptbuch .
-docker run -d -p 8080:80 --name rezeptbuch rezeptbuch
+git pull
+docker compose up -d --build
 ```
 
-## 📁 Projektstruktur
-```
-rezeptbuch/
-├── app/
-│   └── index.html       # Single-Page-App (HTML + CSS + JS)
-├── nginx/
-│   └── nginx.conf       # Nginx Konfiguration
-├── Dockerfile           # Container Build
-├── docker-compose.yml   # Compose Setup
-└── README.md
+## Auf anderen Geräten im selben Netzwerk
+
+Ersetze `localhost` durch die IP des Host-Rechners, z.B. `http://192.168.1.100:8080`
+
+## Nützliche Befehle
+
+```bash
+# Logs anzeigen
+docker compose logs -f
+
+# Rezepte direkt anzeigen
+docker exec rezeptbuch-backend cat /data/recipes.json
+
+# Container stoppen
+docker compose down
+
+# Alles inkl. Daten löschen (Vorsicht!)
+docker compose down -v
 ```
