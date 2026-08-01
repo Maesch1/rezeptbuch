@@ -199,7 +199,7 @@ let currentFilter = '';
 let currentSearch = '';
 let currentView = 'list';
 let currentDetailId = null;
-let pendingImageDataUrl = null; // temp storage for new image in modal
+let pendingImageDataUrl = null;
 
 // ─── PERSISTENCE ─────────────────────────────────────────
 function saveRecipes() {
@@ -222,12 +222,13 @@ function showToast(msg, type = 'success') {
   setTimeout(() => { t.style.animation = 'fadeOut .3s ease forwards'; setTimeout(() => t.remove(), 300); }, 2500);
 }
 
-// ─── RENDER LIST ─────────────────────────────────────────
+// ─── RENDER ──────────────────────────────────────────────
 function showList() {
   currentView = 'list';
   render();
 }
 
+// Vollständiger Re-render (bei Filter-Wechsel, nach Speichern, etc.)
 function render() {
   const main = document.getElementById('main-content');
   updateCount();
@@ -237,6 +238,32 @@ function render() {
     if (r) { renderDetail(r, main); return; }
   }
 
+  main.innerHTML = `
+    <div class="toolbar" id="toolbar">
+      <div class="search-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-input" id="search-input" type="search" placeholder="Rezepte durchsuchen…" value="${escHtml(currentSearch)}" oninput="onSearch(this.value)" aria-label="Rezepte suchen">
+      </div>
+      <select class="filter-select" onchange="onFilter(this.value)" aria-label="Nach Kategorie filtern">
+        <option value="">Alle Kategorien</option>
+        ${CATEGORIES.map(c => `<option value="${escHtml(c)}" ${currentFilter===c?'selected':''}>${escHtml(c)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="recipe-grid" id="recipe-grid">
+      ${gridInner()}
+    </div>
+  `;
+}
+
+// Nur das Karten-Grid aktualisieren – Toolbar bleibt unangetastet
+function renderGrid() {
+  const grid = document.getElementById('recipe-grid');
+  if (!grid) { render(); return; }
+  grid.innerHTML = gridInner();
+  updateCount();
+}
+
+function gridInner() {
   const filtered = recipes.filter(r => {
     const matchCat = !currentFilter || r.category === currentFilter;
     const term = currentSearch.toLowerCase();
@@ -244,28 +271,17 @@ function render() {
     return matchCat && matchSearch;
   });
 
-  main.innerHTML = `
-    <div class="toolbar">
-      <div class="search-wrap">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-input" type="search" placeholder="Rezepte durchsuchen…" value="${escHtml(currentSearch)}" oninput="onSearch(this.value)" aria-label="Rezepte suchen">
+  if (!filtered.length) {
+    return `
+      <div class="empty-state">
+        <div class="empty-icon">${currentSearch||currentFilter ? '🔍' : '🍽️'}</div>
+        <h3>${currentSearch||currentFilter ? 'Keine Treffer' : 'Noch keine Rezepte'}</h3>
+        <p>${currentSearch||currentFilter ? 'Versuche einen anderen Suchbegriff oder entferne den Filter.' : 'Leg dein erstes Rezept an und starte dein digitales Rezeptbuch!'}</p>
+        ${!currentSearch && !currentFilter ? '<button class="btn btn-primary" onclick="openAddModal()">Erstes Rezept erstellen</button>' : ''}
       </div>
-      <select class="filter-select" onchange="onFilter(this.value)" aria-label="Nach Kategorie filtern">
-        <option value="">Alle Kategorien</option>
-        ${CATEGORIES.map(c => `<option value="${escHtml(c)}" ${currentFilter===c?'selected':''}>${escHtml(c)}</option>`).join('')}
-      </select>
-    </div>
-    <div class="recipe-grid">
-      ${filtered.length ? filtered.map(cardHtml).join('') : `
-        <div class="empty-state">
-          <div class="empty-icon">${currentSearch||currentFilter ? '🔍' : '🍽️'}</div>
-          <h3>${currentSearch||currentFilter ? 'Keine Treffer' : 'Noch keine Rezepte'}</h3>
-          <p>${currentSearch||currentFilter ? 'Versuche einen anderen Suchbegriff oder entferne den Filter.' : 'Leg dein erstes Rezept an und starte dein digitales Rezeptbuch!'}</p>
-          ${!currentSearch && !currentFilter ? '<button class="btn btn-primary" onclick="openAddModal()">Erstes Rezept erstellen</button>' : ''}
-        </div>
-      `}
-    </div>
-  `;
+    `;
+  }
+  return filtered.map(cardHtml).join('');
 }
 
 function cardHtml(r) {
@@ -525,7 +541,7 @@ function removeImage() {
     <input class="image-upload-input" type="file" id="f-image" accept="image/*" onchange="onImageSelected(event)">`;
 }
 
-// ─── INGREDIENT ROW (with unit dropdown) ─────────────────
+// ─── INGREDIENT ROW ───────────────────────────────────────
 function ingredientRowHtml(i, idx) {
   const unitOptions = UNITS.map(u =>
     `<option value="${escHtml(u)}" ${i.unit===u?'selected':''}>${u || '—'}</option>`
@@ -672,7 +688,8 @@ function deleteRecipe(id) {
 }
 
 // ─── SEARCH / FILTER ─────────────────────────────────────
-function onSearch(val) { currentSearch = val; render(); }
+// FIX: onSearch ruft nur renderGrid() auf → Suchfeld-Fokus bleibt erhalten
+function onSearch(val) { currentSearch = val; renderGrid(); }
 function onFilter(val) { currentFilter = val; render(); }
 
 // ─── HELPERS ─────────────────────────────────────────────
