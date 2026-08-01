@@ -1,31 +1,31 @@
 # 🍳 Rezeptbuch
 
-Ein digitales Rezeptbuch als Docker-App mit persistenter Datenspeicherung.
+Ein dockerisiertes Rezeptbuch mit persistentem Backend.
 
 ## Architektur
 
 ```
-┌─────────────────────────────────────────┐
-│  Browser  →  http://localhost:8080       │
-└──────────────────┬──────────────────────┘
-                   │
-        ┌──────────▼──────────┐
-        │  nginx (Frontend)   │
-        │  Port 80 → 8080     │
-        └──────────┬──────────┘
-                   │ /api/*
-        ┌──────────▼──────────┐
-        │  Node.js (Backend)  │
-        │  Port 3001          │
-        └──────────┬──────────┘
-                   │
-        ┌──────────▼──────────┐
-        │  Docker Volume      │
-        │  /data/recipes.json │
-        └─────────────────────┘
+┌─────────────────────────────────┐
+│         Docker Compose          │
+│                                 │
+│  ┌──────────┐  ┌─────────────┐  │
+│  │  nginx   │  │  Flask API  │  │
+│  │:8080→:80 │→ │   :5000     │  │
+│  └──────────┘  └──────┬──────┘  │
+│                        │        │
+│                 ┌──────▼──────┐ │
+│                 │  SQLite DB  │ │
+│                 │  (Volume)   │ │
+│                 └─────────────┘ │
+└─────────────────────────────────┘
 ```
 
-## Quickstart
+- **Frontend**: nginx serviert die statische HTML-App
+- **Backend**: Python Flask REST-API (`/api/rezepte`)
+- **Datenbank**: SQLite gespeichert in Docker Volume `rezepte-daten`
+- **Daten bleiben erhalten** — auch nach `docker compose down`
+
+## Schnellstart
 
 ```bash
 git clone https://github.com/Maesch1/rezeptbuch.git
@@ -33,37 +33,45 @@ cd rezeptbuch
 docker compose up -d --build
 ```
 
-Danach: **http://localhost:8080**
+Dann im Browser: **http://localhost:8080**
 
-## Datenspeicherung
+## Befehle
 
-- Rezepte werden in `/data/recipes.json` im Docker Volume `rezeptbuch-data` gespeichert
-- Das Volume überlebt Container-Neustarts und Updates
-- Backup: `docker run --rm -v rezeptbuch-data:/data -v $(pwd):/backup alpine tar czf /backup/recipes-backup.tar.gz /data`
+| Aktion | Befehl |
+|--------|--------|
+| Starten | `docker compose up -d --build` |
+| Stoppen | `docker compose down` |
+| Logs anzeigen | `docker compose logs -f` |
+| Status prüfen | `docker compose ps` |
+| Daten sichern | `docker run --rm -v rezeptbuch_rezepte-daten:/data -v $(pwd):/backup alpine tar czf /backup/rezepte-backup.tar.gz /data` |
+| Daten wiederherstellen | `docker run --rm -v rezeptbuch_rezepte-daten:/data -v $(pwd):/backup alpine tar xzf /backup/rezepte-backup.tar.gz -C /` |
 
-## Update
+## API Endpunkte
+
+| Method | URL | Beschreibung |
+|--------|-----|--------------|
+| GET | `/api/rezepte` | Alle Rezepte laden |
+| GET | `/api/rezepte?suche=pasta` | Rezepte suchen |
+| GET | `/api/rezepte?kategorie=Dessert` | Nach Kategorie filtern |
+| POST | `/api/rezepte` | Neues Rezept erstellen |
+| PUT | `/api/rezepte/{id}` | Rezept bearbeiten |
+| DELETE | `/api/rezepte/{id}` | Rezept löschen |
+| GET | `/api/health` | API Status prüfen |
+
+## Backup & Migration
+
+Da die Daten in einem Docker Volume (`rezepte-daten`) gespeichert sind, kannst du sie einfach sichern und auf ein anderes Gerät übertragen:
 
 ```bash
-git pull
-docker compose up -d --build
-```
+# Backup erstellen
+docker run --rm \
+  -v rezeptbuch_rezepte-daten:/data \
+  -v $(pwd):/backup \
+  alpine tar czf /backup/rezepte-backup.tar.gz /data
 
-## Auf anderen Geräten im selben Netzwerk
-
-Ersetze `localhost` durch die IP des Host-Rechners, z.B. `http://192.168.1.100:8080`
-
-## Nützliche Befehle
-
-```bash
-# Logs anzeigen
-docker compose logs -f
-
-# Rezepte direkt anzeigen
-docker exec rezeptbuch-backend cat /data/recipes.json
-
-# Container stoppen
-docker compose down
-
-# Alles inkl. Daten löschen (Vorsicht!)
-docker compose down -v
+# Auf neuem Gerät wiederherstellen
+docker run --rm \
+  -v rezeptbuch_rezepte-daten:/data \
+  -v $(pwd):/backup \
+  alpine tar xzf /backup/rezepte-backup.tar.gz -C /
 ```

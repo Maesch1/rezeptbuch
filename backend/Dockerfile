@@ -1,7 +1,14 @@
-FROM node:20-alpine
+FROM python:3.12-slim
+
 WORKDIR /app
-COPY package.json .
-RUN npm install --production
-COPY server.js .
-EXPOSE 3001
-CMD ["node", "server.js"]
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app.py .
+
+ENV DB_PATH=/data/rezepte.db
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
