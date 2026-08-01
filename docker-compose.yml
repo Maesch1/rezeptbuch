@@ -1,0 +1,7 @@
+services:
+  rezeptbuch:
+    build: .
+    container_name: rezeptbuch
+    ports:
+      - "8080:80"
+    restart: unless-stopped
