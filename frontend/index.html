@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rezeptbuch</title>
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root,[data-theme="light"]{
       --bg:#f7f6f2;--surf:#f9f8f5;--surf2:#fbfbf9;--surf3:#f3f0ec;
@@ -165,7 +166,6 @@
     .toast.ok{background:var(--ok)}.toast.err{background:var(--err)}
     @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 
-    /* ── Import Modal ── */
     .itabs{display:flex;border-bottom:1px solid var(--div);margin-bottom:1.25rem}
     .itab{padding:.5rem 1rem;font-size:var(--txsm);font-weight:500;color:var(--txm);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
     .itab.active{color:var(--pr);border-bottom-color:var(--pr)}
@@ -176,30 +176,6 @@
     .impfile input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
     .impfile p{color:var(--txm);font-size:var(--txsm);margin-top:.5rem}
     .imp-result{background:var(--surf3);border-radius:var(--r2);padding:.75rem 1rem;font-size:var(--txsm);color:var(--txm);min-height:60px;white-space:pre-wrap;word-break:break-word}
-
-    /* ── PDF ── */
-    @media print{
-      *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
-      body{background:#fff !important;color:#111 !important;font-family:Georgia,serif;font-size:10pt}
-      header,.toolbar,.cact,.dact,.twrap,.dov:not(#detailOv){display:none !important}
-      .dov#detailOv{position:static !important;opacity:1 !important;pointer-events:all !important;padding:0 !important;background:none !important;backdrop-filter:none !important;display:block !important;overflow:visible !important}
-      .dcard{box-shadow:none !important;border-radius:0 !important;max-width:100% !important;transform:none !important;width:100%}
-      .dhero{height:120pt;width:100%;object-fit:cover}
-      .dhero-ph{display:none !important}
-      .dcontent{padding:.75rem 1.25rem}
-      .dtitle{font-size:16pt;margin-bottom:2pt}
-      .dmeta{font-size:8pt;margin-bottom:.6rem;gap:.75rem}
-      .dsec{margin-bottom:.75rem}
-      .dsectitle{font-size:9pt;color:#01696f;border-bottom:1px solid #ccc;margin-bottom:.3rem;padding-bottom:.2rem}
-      .zi{padding:.2rem 0;font-size:8.5pt;border-bottom:1px solid #f0f0f0}
-      .zmenge{min-width:110pt}
-      .sti{margin-bottom:.4rem;font-size:8.5pt}
-      .snum{background:#01696f !important;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;border-radius:50%;width:16pt;height:16pt;min-width:16pt;display:inline-flex;align-items:center;justify-content:center;font-size:7pt;font-weight:700;flex-shrink:0;margin-top:1pt}
-      #dnotizen{font-size:8.5pt}
-      .pdfhdr{display:block !important;padding:.25rem 1.25rem;font-size:7pt;color:#999;border-bottom:1px solid #ddd;margin-bottom:.4rem}
-      .badge{background:#cedcd8 !important;color:#01696f !important;font-size:7pt;padding:1pt 5pt}
-    }
-    .pdfhdr{display:none}
 
     @media(max-width:600px){
       header{padding:.75rem 1rem} main{padding:1.25rem 1rem}
@@ -267,8 +243,8 @@
     <div class="mbody">
       <p style="font-size:var(--txsm);color:var(--txm)">Kopiere einen Rezepttext oder lade eine Datei hoch — die Felder werden automatisch ausgefüllt.</p>
       <div class="itabs">
-        <button class="itab active" onclick="switchTab('text')">📝 Text einfügen</button>
-        <button class="itab" onclick="switchTab('file')">📄 Datei / Foto</button>
+        <button class="itab active" onclick="switchTab('text')">&#x1F4DD; Text einfügen</button>
+        <button class="itab" onclick="switchTab('file')">&#x1F4C4; Datei / Foto</button>
       </div>
       <div class="itabpanel active" id="tabText">
         <textarea id="impText" rows="10" placeholder="Rezepttext hier einfügen…
@@ -376,7 +352,6 @@ Zubereitung:
 <!-- DETAIL -->
 <div class="dov" id="detailOv" onclick="closeDOvBg(event)">
   <div class="dcard">
-    <div class="pdfhdr">Rezeptbuch · <span id="pdfDate"></span></div>
     <div id="dhero"></div>
     <div class="dcontent">
       <div class="dhead">
@@ -397,7 +372,7 @@ Zubereitung:
       </div>
       <div class="dact">
         <button class="btn btn-pr" id="dEditBtn">Bearbeiten</button>
-        <button class="btn btn-pdf" onclick="exportPdf()">
+        <button class="btn btn-pdf" id="dPdfBtn">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           Als PDF
         </button>
@@ -416,6 +391,7 @@ let bildB64 = null;
 let apiOk = false;
 let impTab = 'text';
 let impFileText = '';
+let currentRezept = null;
 
 async function apiFetch(path, opts = {}) {
   const r = await fetch(API + path, { headers:{'Content-Type':'application/json'}, ...opts });
@@ -527,6 +503,7 @@ async function openD(id) {
   let r = alle.find(x => x.id === id);
   if (apiOk) { try { r = await apiFetch(`/api/rezepte/${id}`); } catch {} }
   if (!r) return;
+  currentRezept = r;
   document.getElementById('dbadge').textContent = r.kategorie;
   document.getElementById('dtitle').textContent = r.titel;
   document.getElementById('dhero').innerHTML = r.bild
@@ -544,19 +521,165 @@ async function openD(id) {
   document.getElementById('dnotsec').style.display = n ? 'block' : 'none';
   document.getElementById('dnotizen').textContent = n;
   document.getElementById('dEditBtn').onclick = () => { closeD(); openEdit(id); };
-  document.getElementById('dDelBtn').onclick = () => delR(id);
+  document.getElementById('dDelBtn').onclick  = () => delR(id);
+  document.getElementById('dPdfBtn').onclick  = () => exportPdf(currentRezept);
   document.getElementById('detailOv').classList.add('open');
 }
-function closeD() { document.getElementById('detailOv').classList.remove('open'); }
+function closeD() { document.getElementById('detailOv').classList.remove('open'); currentRezept = null; }
 function closeDOvBg(ev) { if (ev.target === document.getElementById('detailOv')) closeD(); }
 
-function exportPdf() {
-  document.getElementById('pdfDate').textContent =
-    new Date().toLocaleDateString('de-CH',{day:'2-digit',month:'long',year:'numeric'});
-  window.print();
+// ─── PDF Export (jsPDF) ──────────────────────────────────────
+async function exportPdf(r) {
+  if (!r) return;
+  const btn = document.getElementById('dPdfBtn');
+  btn.disabled = true;
+  btn.textContent = 'Erstelle PDF…';
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const W = 210, ML = 18, MR = 18, MT = 18;
+    const CW = W - ML - MR;
+    let y = MT;
+
+    // Farben
+    const TEAL  = [1, 105, 111];
+    const GRAY  = [120, 120, 116];
+    const BLACK = [40, 37, 29];
+    const LGRAY = [220, 217, 213];
+
+    // Bild (falls vorhanden)
+    if (r.bild && r.bild.startsWith('data:image')) {
+      try {
+        const fmt = r.bild.includes('data:image/png') ? 'PNG' : 'JPEG';
+        doc.addImage(r.bild, fmt, ML, y, CW, 50);
+        y += 54;
+      } catch {}
+    }
+
+    // Kategorie-Badge
+    doc.setFontSize(8);
+    doc.setTextColor(...TEAL);
+    doc.setFont('helvetica','bold');
+    doc.text(r.kategorie.toUpperCase(), ML, y);
+    y += 5;
+
+    // Titel
+    doc.setFontSize(22);
+    doc.setTextColor(...BLACK);
+    doc.setFont('helvetica','bold');
+    const titleLines = doc.splitTextToSize(r.titel, CW);
+    doc.text(titleLines, ML, y);
+    y += titleLines.length * 9 + 2;
+
+    // Trennlinie
+    doc.setDrawColor(...LGRAY);
+    doc.setLineWidth(0.3);
+    doc.line(ML, y, W - MR, y);
+    y += 4;
+
+    // Meta
+    doc.setFontSize(9);
+    doc.setTextColor(...GRAY);
+    doc.setFont('helvetica','normal');
+    const meta = `⏱ ${r.kochzeit} Min.   👥 ${r.portionen} Portionen   🥘 ${r.zutaten.length} Zutaten   📋 ${r.schritte.length} Schritte`;
+    doc.text(meta, ML, y);
+    y += 7;
+
+    function checkPage(needed = 10) {
+      if (y + needed > 280) { doc.addPage(); y = MT; }
+    }
+
+    function sectionTitle(title) {
+      checkPage(14);
+      doc.setFontSize(11);
+      doc.setFont('helvetica','bold');
+      doc.setTextColor(...TEAL);
+      doc.text(title, ML, y);
+      doc.setDrawColor(...TEAL);
+      doc.setLineWidth(0.4);
+      doc.line(ML, y + 1.5, W - MR, y + 1.5);
+      y += 7;
+      doc.setTextColor(...BLACK);
+      doc.setFont('helvetica','normal');
+    }
+
+    // Zutaten
+    if (r.zutaten.length) {
+      sectionTitle('Zutaten');
+      doc.setFontSize(9.5);
+      for (const z of r.zutaten) {
+        checkPage(7);
+        const menge = [z.menge, z.einheit].filter(Boolean).join(' ');
+        doc.setTextColor(...GRAY);
+        doc.setFont('helvetica','normal');
+        doc.text(menge || '–', ML, y);
+        doc.setTextColor(...BLACK);
+        doc.text(z.name || '', ML + 42, y);
+        doc.setDrawColor(...LGRAY);
+        doc.setLineWidth(0.15);
+        doc.line(ML, y + 1.5, W - MR, y + 1.5);
+        y += 6;
+      }
+      y += 3;
+    }
+
+    // Zubereitung
+    if (r.schritte.length) {
+      sectionTitle('Zubereitung');
+      doc.setFontSize(9.5);
+      for (let i = 0; i < r.schritte.length; i++) {
+        const lines = doc.splitTextToSize(r.schritte[i], CW - 10);
+        const blockH = lines.length * 5.5 + 3;
+        checkPage(blockH + 4);
+        // Schritt-Nummer Kreis
+        doc.setFillColor(...TEAL);
+        doc.circle(ML + 3, y - 1.5, 3, 'F');
+        doc.setFontSize(7);
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica','bold');
+        doc.text(String(i + 1), ML + 3, y - 1.5 + 0.8, { align: 'center' });
+        // Text
+        doc.setFontSize(9.5);
+        doc.setFont('helvetica','normal');
+        doc.setTextColor(...BLACK);
+        doc.text(lines, ML + 9, y);
+        y += blockH;
+      }
+      y += 2;
+    }
+
+    // Notizen
+    if ((r.notizen||'').trim()) {
+      sectionTitle('Notizen');
+      doc.setFontSize(9);
+      doc.setTextColor(...GRAY);
+      const nl = doc.splitTextToSize(r.notizen.trim(), CW);
+      for (const line of nl) { checkPage(6); doc.text(line, ML, y); y += 5.5; }
+    }
+
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7.5);
+      doc.setTextColor(...GRAY);
+      doc.text(`Rezeptbuch · ${new Date().toLocaleDateString('de-CH',{day:'2-digit',month:'long',year:'numeric'})}`, ML, 290);
+      doc.text(`${i} / ${pageCount}`, W - MR, 290, { align: 'right' });
+    }
+
+    const filename = r.titel.replace(/[^a-z0-9\u00e4\u00f6\u00fc\u00df\s-]/gi,'').trim().replace(/\s+/g,'-').toLowerCase();
+    doc.save(`${filename}.pdf`);
+    toast('📄 PDF heruntergeladen!');
+  } catch(err) {
+    console.error(err);
+    toast('PDF-Fehler: ' + err.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Als PDF';
+  }
 }
 
-// ── Import ─────────────────────────────────────────────────
+// ─── Import ──────────────────────────────────────────────
 function openImport() {
   document.getElementById('impText').value = '';
   impFileText = '';
@@ -577,7 +700,7 @@ function handleImpFile(inp) {
   const f = inp.files[0]; if (!f) return;
   const res = document.getElementById('impFileResult');
   if (f.type.startsWith('image/')) {
-    res.textContent = '⚠️ Bilddateien (Fotos/Scans) können nicht direkt als Text gelesen werden.\nBitte tippe oder kopiere den Rezepttext manuell in den "Text einfügen"-Tab.';
+    res.textContent = '⚠️ Bilddateien können nicht direkt gelesen werden.\nBitte Text manuell in den "Text einfügen"-Tab kopieren.';
     res.style.display = 'block'; impFileText = '';
   } else {
     const rd = new FileReader();
@@ -592,78 +715,54 @@ function handleImpFile(inp) {
 function parseRezept(raw) {
   const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
   const out = { titel:'', kategorie:'Sonstiges', portionen:2, kochzeit:30, notizen:'', zutaten:[], schritte:[] };
-
-  // Titel = erste nicht-leere Zeile
   if (lines[0]) out.titel = lines[0].replace(/^#\s*/, '').trim();
-
-  // Metazeilen
   const metaPat = /(?:portionen|personen|servings)[:\s]+(\d+)/i;
   const timePat = /(?:zeit|time|kochzeit|zubereitungszeit)[:\s]+(\d+)/i;
   const katPat  = /(?:kategorie|category)[:\s]+(.+)/i;
-  const katMap  = {fr:'ÜFrühstück',mit:'Mittagessen',ab:'Abendessen',des:'Dessert',sna:'Snacks',get:'Getränke'};
+  const katMap  = {fr:'Frühstück',mit:'Mittagessen',ab:'Abendessen',des:'Dessert',sna:'Snacks',get:'Getränke'};
   for (const l of lines) {
     let m;
     if ((m=metaPat.exec(l))) out.portionen = +m[1];
     if ((m=timePat.exec(l)))  out.kochzeit  = +m[1];
-    if ((m=katPat.exec(l)))  {
-      const v = m[1].trim();
-      const k = Object.keys(katMap).find(k => v.toLowerCase().startsWith(k));
-      out.kategorie = k ? katMap[k].replace('Ü','') : v;
-    }
-    // inline: "30 Min" oder "30 Minuten"
-    const inlineTime = /\b(\d+)\s*min/i.exec(l);
-    if (inlineTime && !timePat.test(l)) out.kochzeit = +inlineTime[1];
-    const inlinePor  = /\b(\d+)\s*(?:port|person|personen|servings)/i.exec(l);
-    if (inlinePor  && !metaPat.test(l)) out.portionen = +inlinePor[1];
+    if ((m=katPat.exec(l)))  { const v=m[1].trim(); const k=Object.keys(katMap).find(k=>v.toLowerCase().startsWith(k)); out.kategorie=k?katMap[k]:v; }
+    const it = /\b(\d+)\s*min/i.exec(l); if (it && !timePat.test(l)) out.kochzeit = +it[1];
+    const ip = /\b(\d+)\s*(?:port|person|personen|servings)/i.exec(l); if (ip && !metaPat.test(l)) out.portionen = +ip[1];
   }
-
-  // Abschnitte erkennen
   let section = 'none';
   const zutSection = /^(zutaten|ingredients|material)/i;
   const zubSection = /^(zubereitung|zubereiten|anleitung|schritte|steps|preparation|instructions)/i;
   const notSection = /^(notizen?|tipps?|hinweis|notes?)/i;
   const stepNum    = /^(?:\d+[\.\)\:]\s*|[-*]\s*)/;
-
   for (const l of lines.slice(1)) {
     if (zutSection.test(l)) { section='z'; continue; }
     if (zubSection.test(l)) { section='s'; continue; }
     if (notSection.test(l)) { section='n'; continue; }
     if (/^#{1,3}\s/.test(l)) { section='none'; continue; }
-
-    if (section === 'z') {
-      // Menge + Einheit + Name parsen
+    if (section==='z') {
       const zm = /^([\d,.\/-]+)\s*(ml|cl|dl|l|tl|el|g|kg|mg|stk\.?|pck\.?|dose|glas|tasse[n]?|bund|scheiben?|zehen?|prisen?|tropfen|etwas|[\u2013-])?\s*(.+)/i.exec(l);
       if (zm) out.zutaten.push({ menge:zm[1], einheit:zm[2]||'', name:zm[3].trim() });
       else if (l.length > 1) out.zutaten.push({ menge:'', einheit:'', name:l });
-    } else if (section === 's') {
-      const txt = l.replace(stepNum,'').trim();
-      if (txt) out.schritte.push(txt);
-    } else if (section === 'n') {
+    } else if (section==='s') {
+      const txt = l.replace(stepNum,'').trim(); if (txt) out.schritte.push(txt);
+    } else if (section==='n') {
       out.notizen += (out.notizen ? '\n' : '') + l;
     }
   }
-
-  // Fallback: keine Abschnitte erkannt -> alles nach Zeile 1 als Schritte
   if (!out.zutaten.length && !out.schritte.length) {
-    for (const l of lines.slice(1)) {
-      if (stepNum.test(l)) out.schritte.push(l.replace(stepNum,'').trim());
-    }
+    for (const l of lines.slice(1)) { if (stepNum.test(l)) out.schritte.push(l.replace(stepNum,'').trim()); }
   }
   return out;
 }
 function doImport() {
-  const raw = impTab === 'text'
-    ? document.getElementById('impText').value.trim()
-    : impFileText.trim();
-  if (!raw) { toast('Kein Text vorhanden.', 'err'); return; }
+  const raw = impTab==='text' ? document.getElementById('impText').value.trim() : impFileText.trim();
+  if (!raw) { toast('Kein Text vorhanden.','err'); return; }
   const parsed = parseRezept(raw);
-  if (!parsed.titel) { toast('Kein Titel erkannt.', 'err'); return; }
-  closeImp();
-  openForm(parsed);
+  if (!parsed.titel) { toast('Kein Titel erkannt.','err'); return; }
+  closeImp(); openForm(parsed);
   toast('✅ Felder ausgefüllt — bitte prüfen & speichern.');
 }
 
-// ── Bild ───────────────────────────────────────────────────
+// ─── Bild ───────────────────────────────────────────────
 function initDrop() {
   const z = document.getElementById('dropz');
   z.addEventListener('dragover', ev => { ev.preventDefault(); z.classList.add('drag'); });
@@ -672,12 +771,12 @@ function initDrop() {
     ev.preventDefault(); z.classList.remove('drag');
     const f = ev.dataTransfer.files[0];
     if (f?.type.startsWith('image/')) handleImg(f);
-    else toast('Nur Bilddateien!', 'err');
+    else toast('Nur Bilddateien!','err');
   });
 }
 function prevBild(inp) { if (inp.files[0]) handleImg(inp.files[0]); }
 function handleImg(f) {
-  if (f.size > 8*1024*1024) { toast('Bild max. 8 MB', 'err'); return; }
+  if (f.size > 8*1024*1024) { toast('Bild max. 8 MB','err'); return; }
   const rd = new FileReader();
   rd.onload = ev => { bildB64 = ev.target.result; showPrev(bildB64); };
   rd.readAsDataURL(f);
@@ -700,7 +799,7 @@ function clearImg() {
   w.style.display = 'none'; w.innerHTML = '';
 }
 
-// ── Formular ───────────────────────────────────────────────
+// ─── Formular ────────────────────────────────────────────
 function openForm(data=null) {
   bildB64 = data ? (data.bild||null) : null;
   document.getElementById('editId').value = data ? (data.id||'') : '';
@@ -768,7 +867,7 @@ async function saveR() {
       const saved = id
         ? await apiFetch(`/api/rezepte/${id}`,{method:'PUT',body:JSON.stringify(payload)})
         : await apiFetch('/api/rezepte',{method:'POST',body:JSON.stringify(payload)});
-      if (id) { const i=alle.findIndex(r=>r.id===Number(id)); i!==-1?alle[i]=saved:alle.unshift(saved); }
+      if (id){const i=alle.findIndex(r=>r.id===Number(id));i!==-1?alle[i]=saved:alle.unshift(saved);}
       else alle.unshift(saved);
     } else {
       const r={...payload,id:id?Number(id):nextId(),erstellt:new Date().toISOString()};
