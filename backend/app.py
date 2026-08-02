@@ -30,10 +30,17 @@ def init_db():
             zutaten   TEXT    NOT NULL DEFAULT '[]',
             schritte  TEXT    NOT NULL DEFAULT '[]',
             notizen   TEXT    NOT NULL DEFAULT '',
+            bild      TEXT    NOT NULL DEFAULT '',
             erstellt  TEXT    NOT NULL,
             geaendert TEXT    NOT NULL
         )
     ''')
+    # Migration: bild-Spalte hinzufügen falls nicht vorhanden (bestehende DBs)
+    try:
+        conn.execute('ALTER TABLE rezepte ADD COLUMN bild TEXT NOT NULL DEFAULT ""')
+        conn.commit()
+    except Exception:
+        pass
     conn.commit()
     conn.close()
 
@@ -45,13 +52,11 @@ def row_to_dict(row):
     return d
 
 
-# --- Frontend ---
 @app.route('/')
 def index():
     return send_from_directory('static', 'index.html')
 
 
-# --- API ---
 @app.route('/api/health')
 def health():
     return jsonify({'status': 'ok'})
@@ -82,7 +87,7 @@ def create_rezept():
     now = datetime.utcnow().isoformat()
     conn = get_db()
     cur = conn.execute(
-        'INSERT INTO rezepte (titel,kategorie,portionen,kochzeit,zutaten,schritte,notizen,erstellt,geaendert) VALUES (?,?,?,?,?,?,?,?,?)',
+        'INSERT INTO rezepte (titel,kategorie,portionen,kochzeit,zutaten,schritte,notizen,bild,erstellt,geaendert) VALUES (?,?,?,?,?,?,?,?,?,?)',
         (
             data.get('titel', 'Ohne Titel'),
             data.get('kategorie', 'Sonstiges'),
@@ -91,6 +96,7 @@ def create_rezept():
             json.dumps(data.get('zutaten', []), ensure_ascii=False),
             json.dumps(data.get('schritte', []), ensure_ascii=False),
             data.get('notizen', ''),
+            data.get('bild', '') or '',
             now, now
         )
     )
@@ -116,7 +122,7 @@ def update_rezept(rid):
     now = datetime.utcnow().isoformat()
     conn = get_db()
     conn.execute(
-        'UPDATE rezepte SET titel=?,kategorie=?,portionen=?,kochzeit=?,zutaten=?,schritte=?,notizen=?,geaendert=? WHERE id=?',
+        'UPDATE rezepte SET titel=?,kategorie=?,portionen=?,kochzeit=?,zutaten=?,schritte=?,notizen=?,bild=?,geaendert=? WHERE id=?',
         (
             data.get('titel', 'Ohne Titel'),
             data.get('kategorie', 'Sonstiges'),
@@ -125,6 +131,7 @@ def update_rezept(rid):
             json.dumps(data.get('zutaten', []), ensure_ascii=False),
             json.dumps(data.get('schritte', []), ensure_ascii=False),
             data.get('notizen', ''),
+            data.get('bild', '') or '',
             now, rid
         )
     )
