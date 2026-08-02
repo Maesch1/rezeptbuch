@@ -1,13 +1,18 @@
-FROM python:3.12-slim
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Abhängigkeiten zuerst (besseres Layer-Caching)
+COPY package.json ./
+RUN npm install --omit=dev
 
-COPY main.py .
+COPY server.js ./
 
-RUN mkdir -p /app/data/bilder
+# Daten-Verzeichnis
+VOLUME ["/data"]
 
-EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3001/health || exit 1
+
+EXPOSE 3001
+CMD ["node", "server.js"]

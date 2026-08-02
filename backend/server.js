@@ -1,93 +1,151 @@
+// ═══════════════════════════════════════════════════════════
+//  Rezeptbuch — Backend  (Node.js + Express + better-sqlite3)
+// ═══════════════════════════════════════════════════════════
 const express = require('express');
-const fs = require('fs');
+const Database = require('better-sqlite3');
 const path = require('path');
-const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
-const PORT = 3001;
-const DATA_FILE = process.env.DATA_FILE || '/data/recipes.json';
+const PORT = process.env.PORT || 3001;
+const DB_PATH = process.env.DB_PATH || '/data/rezeptbuch.db';
 
-// Sicherstellen dass /data existiert und recipes.json vorhanden ist
-function ensureDataFile() {
-  const dir = path.dirname(DATA_FILE);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]', 'utf8');
+// Sicherstellen, dass /data existiert
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+
+// ─── Datenbank ───────────────────────────────────────────────
+const db = new Database(DB_PATH);
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS rezepte (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    titel      TEXT    NOT NULL,
+    kategorie  TEXT    NOT NULL DEFAULT 'Sonstiges',
+    portionen  INTEGER NOT NULL DEFAULT 2,
+    kochzeit   INTEGER NOT NULL DEFAULT 30,
+    notizen    TEXT    DEFAULT '',
+    bild       TEXT    DEFAULT NULL,
+    erstellt   TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS zutaten (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    rezept_id  INTEGER NOT NULL REFERENCES rezepte(id) ON DELETE CASCADE,
+    menge      TEXT    DEFAULT '',
+    einheit    TEXT    DEFAULT '',
+    name       TEXT    NOT NULL,
+    sort       INTEGER DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS schritte (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    rezept_id  INTEGER NOT NULL REFERENCES rezepte(id) ON DELETE CASCADE,
+    text       TEXT    NOT NULL,
+    sort       INTEGER DEFAULT 0
+  );
+`);
+
+// ─── Middleware ───────────────────────────────────────────────
+app.use(express.json({ limit: '10mb' }));
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+// ─── Helper ───────────────────────────────────────────────────
+function getRezept(id) {
+  const r = db.prepare('SELECT * FROM rezepte WHERE id = ?').get(id);
+  if (!r) return null;
+  r.zutaten  = db.prepare('SELECT * FROM zutaten  WHERE rezept_id = ? ORDER BY sort').all(id);
+  r.schritte = db.prepare('SELECT text FROM schritte WHERE rezept_id = ? ORDER BY sort').all(id).map(s => s.text);
+  return r;
 }
 
-function readRecipes() {
-  ensureDataFile();
-  try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-  } catch {
-    return [];
-  }
-}
+// ─── Routes ───────────────────────────────────────────────────
 
-function writeRecipes(data) {
-  ensureDataFile();
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
-}
-
-app.use(cors());
-app.use(express.json({ limit: '10mb' })); // Bilder als Base64 können gross sein
-
-// Alle Rezepte abrufen
-app.get('/api/recipes', (req, res) => {
-  res.json(readRecipes());
+// GET /api/rezepte          – alle Rezepte (ohne Bilder, für Liste)
+app.get('/api/rezepte', (req, res) => {
+  const { suche, kategorie } = req.query;
+  let sql = 'SELECT id,titel,kategorie,portionen,kochzeit,notizen,erstellt FROM rezepte WHERE 1=1';
+  const params = [];
+  if (suche)     { sql += ' AND (titel LIKE ? OR notizen LIKE ?)'; params.push(`%${suche}%`, `%${suche}%`); }
+  if (kategorie) { sql += ' AND kategorie = ?'; params.push(kategorie); }
+  sql += ' ORDER BY id DESC';
+  const rows = db.prepare(sql).all(...params);
+  rows.forEach(r => {
+    r.zutaten  = db.prepare('SELECT * FROM zutaten  WHERE rezept_id = ? ORDER BY sort').all(r.id);
+    r.schritte = db.prepare('SELECT text FROM schritte WHERE rezept_id = ? ORDER BY sort').all(r.id).map(s => s.text);
+  });
+  res.json(rows);
 });
 
-// Einzelnes Rezept abrufen
-app.get('/api/recipes/:id', (req, res) => {
-  const recipes = readRecipes();
-  const recipe = recipes.find(r => r.id === req.params.id);
-  if (!recipe) return res.status(404).json({ error: 'Rezept nicht gefunden' });
-  res.json(recipe);
+// GET /api/rezepte/:id      – einzelnes Rezept (mit Bild)
+app.get('/api/rezepte/:id', (req, res) => {
+  const r = getRezept(Number(req.params.id));
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  res.json(r);
 });
 
-// Neues Rezept erstellen
-app.post('/api/recipes', (req, res) => {
-  const recipes = readRecipes();
-  const recipe = {
-    ...req.body,
-    id: req.body.id || crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  recipes.unshift(recipe);
-  writeRecipes(recipes);
-  res.status(201).json(recipe);
+// POST /api/rezepte         – neu erstellen
+app.post('/api/rezepte', (req, res) => {
+  const { titel, kategorie = 'Sonstiges', portionen = 2, kochzeit = 30,
+          notizen = '', bild = null, zutaten = [], schritte = [] } = req.body;
+  if (!titel || !titel.trim()) return res.status(400).json({ error: 'Titel fehlt' });
+
+  const info = db.prepare(
+    'INSERT INTO rezepte (titel,kategorie,portionen,kochzeit,notizen,bild) VALUES (?,?,?,?,?,?)'
+  ).run(titel.trim(), kategorie, portionen, kochzeit, notizen, bild);
+  const id = info.lastInsertRowid;
+
+  const insZ = db.prepare('INSERT INTO zutaten (rezept_id,menge,einheit,name,sort) VALUES (?,?,?,?,?)');
+  const insS = db.prepare('INSERT INTO schritte (rezept_id,text,sort) VALUES (?,?,?)');
+  db.transaction(() => {
+    zutaten.forEach((z, i) => insZ.run(id, z.menge||'', z.einheit||'', z.name||'', i));
+    schritte.forEach((s, i) => insS.run(id, s, i));
+  })();
+
+  res.status(201).json(getRezept(id));
 });
 
-// Rezept aktualisieren
-app.put('/api/recipes/:id', (req, res) => {
-  let recipes = readRecipes();
-  const idx = recipes.findIndex(r => r.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Rezept nicht gefunden' });
-  recipes[idx] = {
-    ...req.body,
-    id: req.params.id,
-    createdAt: recipes[idx].createdAt,
-    updatedAt: new Date().toISOString()
-  };
-  writeRecipes(recipes);
-  res.json(recipes[idx]);
+// PUT /api/rezepte/:id      – aktualisieren
+app.put('/api/rezepte/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!getRezept(id)) return res.status(404).json({ error: 'Nicht gefunden' });
+
+  const { titel, kategorie, portionen, kochzeit, notizen, bild, zutaten = [], schritte = [] } = req.body;
+  if (!titel || !titel.trim()) return res.status(400).json({ error: 'Titel fehlt' });
+
+  db.prepare(
+    'UPDATE rezepte SET titel=?,kategorie=?,portionen=?,kochzeit=?,notizen=?,bild=? WHERE id=?'
+  ).run(titel.trim(), kategorie, portionen, kochzeit, notizen, bild ?? null, id);
+
+  const insZ = db.prepare('INSERT INTO zutaten (rezept_id,menge,einheit,name,sort) VALUES (?,?,?,?,?)');
+  const insS = db.prepare('INSERT INTO schritte (rezept_id,text,sort) VALUES (?,?,?)');
+  db.transaction(() => {
+    db.prepare('DELETE FROM zutaten  WHERE rezept_id = ?').run(id);
+    db.prepare('DELETE FROM schritte WHERE rezept_id = ?').run(id);
+    zutaten.forEach((z, i) => insZ.run(id, z.menge||'', z.einheit||'', z.name||'', i));
+    schritte.forEach((s, i) => insS.run(id, s, i));
+  })();
+
+  res.json(getRezept(id));
 });
 
-// Rezept löschen
-app.delete('/api/recipes/:id', (req, res) => {
-  let recipes = readRecipes();
-  const idx = recipes.findIndex(r => r.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Rezept nicht gefunden' });
-  recipes.splice(idx, 1);
-  writeRecipes(recipes);
-  res.status(204).send();
+// DELETE /api/rezepte/:id   – löschen
+app.delete('/api/rezepte/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const r = getRezept(id);
+  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  db.prepare('DELETE FROM rezepte WHERE id = ?').run(id);
+  res.json({ ok: true, id });
 });
 
-// Health-Check
-app.get('/api/health', (req, res) => res.json({ status: 'ok', recipes: readRecipes().length }));
+// Health
+app.get('/health', (_req, res) => res.json({ status: 'ok', db: DB_PATH }));
 
-app.listen(PORT, () => {
-  console.log(`Rezeptbuch Backend läuft auf Port ${PORT}`);
-  console.log(`Datei: ${DATA_FILE}`);
-  ensureDataFile();
-});
+app.listen(PORT, () => console.log(`✅  Rezeptbuch-API läuft auf Port ${PORT}`));
