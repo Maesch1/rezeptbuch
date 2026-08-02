@@ -1,83 +1,91 @@
 # 🍳 Rezeptbuch
 
-Eine vollständige Rezeptbuch-WebApp mit **FastAPI Backend**, **SQLite Datenbank**, **Docker Volume** und **Bildupload**.
+Eine moderne, responsive Single-Page-App für dein digitales Rezeptbuch — läuft vollständig in einem Docker-Container auf Basis von **nginx:alpine**.
 
-## 🏗️ Architektur
+## ✨ Features
 
-```
-┌─────────────────┐     ┌──────────────────────┐
-│  Browser        │────▶│  nginx (Port 8080)   │
-│                 │     │  Frontend (HTML/JS)  │
-└─────────────────┘     └──────────┬───────────┘
-                                   │ /api/*  /bilder/*
-                         ┌─────────▼──────────┐
-                         │  FastAPI Backend   │
-                         │  (Port 8000)       │
-                         └─────────┬──────────┘
-                                   │
-                         ┌─────────▼──────────┐
-                         │  Docker Volume     │
-                         │  rezeptbuch_data/  │
-                         │  ├── rezepte.db    │
-                         │  └── bilder/       │
-                         └────────────────────┘
-```
-
-## ✅ Features
-
-- Rezepte erstellen, bearbeiten, löschen
-- **Bildupload** (JPG/PNG/WEBP, max. 8 MB) — gespeichert auf Docker Volume
-- **Einheiten-Dropdown** mit Gruppen: Volumen, Gewicht, Stück, **Gewürze**, Sonstiges
-- Kategorien, Portionen, Kochzeit, Zubereitungsschritte, Notizen
+- Rezepte erstellen, bearbeiten und löschen
+- Zutaten mit Menge, Einheit und Name
+- Schritt-für-Schritt Zubereitung
+- Foto-Upload pro Rezept
 - Suche & Kategorie-Filter
+- Automatisches Speichern via `localStorage`
 - Dark / Light Mode
-- **SQLite Datenbank** auf persistentem Docker Volume → Daten überleben Container-Neustart
+- Vollständig responsiv (Mobile + Desktop)
 
-## 🚀 Starten
+---
+
+## 🚀 Schnellstart
+
+### Voraussetzungen
+- [Docker](https://docs.docker.com/get-docker/) ≥ 24.x
+- [Docker Compose](https://docs.docker.com/compose/) ≥ 2.x
+
+### Container starten
 
 ```bash
+# 1. Repository klonen
 git clone https://github.com/Maesch1/rezeptbuch.git
 cd rezeptbuch
+
+# 2. Container bauen und starten
 docker compose up -d --build
+
+# 3. Im Browser öffnen
+open http://localhost:8080
 ```
 
-Danach erreichbar unter: **http://localhost:8080**
+### Nützliche Befehle
 
-## 🔄 Aktualisieren
+| Befehl | Beschreibung |
+|---|---|
+| `docker compose up -d --build` | Bauen + starten |
+| `docker compose up -d` | Starten (ohne rebuild) |
+| `docker compose down` | Stoppen + Container entfernen |
+| `docker compose logs -f` | Logs live anzeigen |
+| `docker compose ps` | Status prüfen |
 
-```bash
-git pull
-docker compose up -d --build
-```
+---
 
-## 📦 Volume
-
-Das Volume `rezeptbuch_data` wird automatisch erstellt und enthält:
-- `rezepte.db` – SQLite Datenbank mit allen Rezepten
-- `bilder/` – Hochgeladene Bilder
-
-Daten bleiben auch nach `docker compose down` erhalten.
-Nur `docker compose down -v` löscht das Volume.
-
-## 🛑 Stoppen
-
-```bash
-docker compose down        # Container stoppen (Daten bleiben)
-docker compose down -v     # Container + Volume löschen
-```
-
-## 🗂️ Struktur
+## 🏗️ Projektstruktur
 
 ```
 rezeptbuch/
-├── docker-compose.yml       ← 2 Services + Volume
-├── backend/
-│   ├── Dockerfile
-│   ├── requirements.txt     ← FastAPI, Uvicorn
-│   └── main.py              ← REST API
-├── frontend/
-│   ├── Dockerfile
-│   ├── nginx.conf           ← Proxy /api → Backend
-│   └── index.html           ← Single Page App
-└── README.md
+├── app/
+│   └── index.html          # Komplette SPA (HTML + CSS + JS)
+├── nginx/
+│   └── nginx.conf          # nginx-Konfiguration
+├── Dockerfile              # nginx:alpine Container
+├── docker-compose.yml      # Compose-Konfiguration
+└── .dockerignore
 ```
+
+---
+
+## 💾 Datenpersistenz
+
+Rezepte werden im **`localStorage`** des Browsers gespeichert — d.h. sie bleiben erhalten, solange du den Browser-Cache nicht löschst. Die Daten sind lokal auf deinem Gerät.
+
+> **Tipp:** Für ein produktives Setup mit Backend-Persistenz (z.B. PostgreSQL + Node.js API) kann das Projekt einfach erweitert werden.
+
+---
+
+## 🔧 Konfiguration
+
+### Port ändern
+
+In `docker-compose.yml`:
+```yaml
+ports:
+  - "3000:80"   # Ändere 8080 auf deinen gewünschten Port
+```
+
+### Produktiv-Deployment
+
+Für ein Produktiv-Deployment empfiehlt sich ein Reverse-Proxy (z.B. Traefik oder nginx-proxy) vor dem Container.
+
+---
+
+## 📝 Lizenz
+
+MIT — frei verwendbar und anpassbar.

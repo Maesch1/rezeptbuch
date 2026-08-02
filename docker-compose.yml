@@ -1,26 +1,21 @@
+# ─── Rezeptbuch — Docker Compose ────────────────────────────────────────────
+# Starten:  docker compose up -d
+# Stoppen:  docker compose down
+# Rebuild:  docker compose up -d --build
+# Logs:     docker compose logs -f
+# ────────────────────────────────────────────────────────────────────────────
 services:
-  backend:
+  rezeptbuch:
     build:
-      context: ./backend
-    container_name: rezeptbuch_backend
-    restart: unless-stopped
-    volumes:
-      - rezeptbuch_data:/app/data
-    environment:
-      - DATA_DIR=/app/data
-    expose:
-      - "8000"
-
-  frontend:
-    build:
-      context: ./frontend
-    container_name: rezeptbuch_frontend
+      context: .
+      dockerfile: Dockerfile
+    container_name: rezeptbuch
     restart: unless-stopped
     ports:
       - "8080:80"
-    depends_on:
-      - backend
-
-volumes:
-  rezeptbuch_data:
-    driver: local
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
