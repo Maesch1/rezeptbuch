@@ -2,16 +2,14 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Abhängigkeiten zuerst (besseres Layer-Caching)
 COPY package.json ./
 RUN npm install --omit=dev
 
 COPY server.js ./
 
-# Daten-Verzeichnis
-VOLUME ["/data"]
+RUN mkdir -p /data
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=15s --timeout=5s --start-period=15s --retries=5 \
   CMD wget -qO- http://localhost:3001/health || exit 1
 
 EXPOSE 3001

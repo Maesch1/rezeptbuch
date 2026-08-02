@@ -1,227 +1,205 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="light">
+<html lang="de" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rezeptbuch</title>
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@700,800&display=swap" rel="stylesheet">
   <style>
-    /* ─── Design Tokens ─────────────────────────────────────── */
     :root,[data-theme="light"]{
-      --color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;
-      --color-surface-offset:#f3f0ec;--color-border:#d4d1ca;--color-divider:#dcd9d5;
-      --color-text:#28251d;--color-text-muted:#7a7974;--color-text-faint:#bab9b4;
-      --color-primary:#01696f;--color-primary-hover:#0c4e54;
-      --color-primary-highlight:#cedcd8;
-      --color-error:#a12c7b;--color-success:#437a22;--color-warning:#964219;
-      --shadow-sm:0 1px 2px oklch(0.2 0.01 80/.06);
-      --shadow-md:0 4px 12px oklch(0.2 0.01 80/.08);
-      --shadow-lg:0 12px 32px oklch(0.2 0.01 80/.12);
-      --radius-sm:.375rem;--radius-md:.5rem;--radius-lg:.75rem;--radius-xl:1rem;
-      --font-body:'Satoshi','Inter',sans-serif;
-      --font-display:'Cabinet Grotesk','Satoshi',sans-serif;
-      --text-xs:clamp(.75rem,.7rem + .25vw,.875rem);
-      --text-sm:clamp(.875rem,.8rem + .35vw,1rem);
-      --text-base:clamp(1rem,.95rem + .25vw,1.125rem);
-      --text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);
-      --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
-      --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
-      --space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;
-      --space-12:3rem;--space-16:4rem;
-      --transition:180ms cubic-bezier(.16,1,.3,1);
+      --bg:#f7f6f2;--surf:#f9f8f5;--surf2:#fbfbf9;--surf3:#f3f0ec;
+      --brd:#d4d1ca;--div:#dcd9d5;
+      --tx:#28251d;--txm:#7a7974;--txf:#bab9b4;
+      --pr:#01696f;--prh:#0c4e54;--prhl:#cedcd8;
+      --err:#a12c7b;--ok:#437a22;--warn:#964219;
+      --shsm:0 1px 2px oklch(0.2 0.01 80/.06);
+      --shmd:0 4px 12px oklch(0.2 0.01 80/.08);
+      --shlg:0 12px 32px oklch(0.2 0.01 80/.12);
+      --r1:.375rem;--r2:.5rem;--r3:.75rem;--r4:1rem;
+      --fb:'Satoshi','Inter',sans-serif;
+      --fd:'Cabinet Grotesk','Satoshi',sans-serif;
+      --txs:clamp(.75rem,.7rem + .25vw,.875rem);
+      --txsm:clamp(.875rem,.8rem + .35vw,1rem);
+      --txb:clamp(1rem,.95rem + .25vw,1.125rem);
+      --txl:clamp(1.125rem,1rem + .75vw,1.5rem);
+      --txxl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+      --tr:180ms cubic-bezier(.16,1,.3,1);
     }
     [data-theme="dark"]{
-      --color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;
-      --color-surface-offset:#1d1c1a;--color-border:#393836;--color-divider:#262523;
-      --color-text:#cdccca;--color-text-muted:#797876;--color-text-faint:#5a5957;
-      --color-primary:#4f98a3;--color-primary-hover:#227f8b;
-      --color-primary-highlight:#313b3b;
-      --color-error:#d163a7;--color-success:#6daa45;--color-warning:#bb653b;
-      --shadow-sm:0 1px 2px oklch(0 0 0/.2);
-      --shadow-md:0 4px 12px oklch(0 0 0/.3);
-      --shadow-lg:0 12px 32px oklch(0 0 0/.4);
+      --bg:#171614;--surf:#1c1b19;--surf2:#201f1d;--surf3:#1d1c1a;
+      --brd:#393836;--div:#262523;
+      --tx:#cdccca;--txm:#797876;--txf:#5a5957;
+      --pr:#4f98a3;--prh:#227f8b;--prhl:#313b3b;
+      --err:#d163a7;--ok:#6daa45;--warn:#bb653b;
+      --shsm:0 1px 2px oklch(0 0 0/.25);
+      --shmd:0 4px 12px oklch(0 0 0/.35);
+      --shlg:0 12px 32px oklch(0 0 0/.45);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
-    body{font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text);background:var(--color-bg);min-height:100dvh;transition:background var(--transition),color var(--transition)}
+    body{font-family:var(--fb);font-size:var(--txb);color:var(--tx);background:var(--bg);min-height:100dvh}
     img{display:block;max-width:100%;height:auto}
     button{cursor:pointer;background:none;border:none;font:inherit;color:inherit}
     input,textarea,select{font:inherit;color:inherit}
-    h1,h2,h3,h4{font-family:var(--font-display);line-height:1.15;text-wrap:balance}
-    p,li{text-wrap:pretty;max-width:72ch}
-    :focus-visible{outline:2px solid var(--color-primary);outline-offset:3px;border-radius:var(--radius-sm)}
-    a,button,[role=button],input,textarea,select{transition:color var(--transition),background var(--transition),border-color var(--transition),box-shadow var(--transition)}
+    h1,h2,h3,h4{font-family:var(--fd);line-height:1.15}
+    :focus-visible{outline:2px solid var(--pr);outline-offset:3px;border-radius:var(--r1)}
+    a,button,input,textarea,select{transition:color var(--tr),background var(--tr),border-color var(--tr),box-shadow var(--tr)}
 
-    /* ─── Layout ─────────────────────────────────────────────── */
+    /* ── Layout ── */
     .app{display:grid;grid-template-rows:auto 1fr;min-height:100dvh}
-    header{position:sticky;top:0;z-index:100;background:var(--color-surface);border-bottom:1px solid var(--color-divider);box-shadow:var(--shadow-sm);padding:var(--space-3) var(--space-6);display:flex;align-items:center;gap:var(--space-4)}
-    .logo{display:flex;align-items:center;gap:var(--space-2);text-decoration:none;color:var(--color-text)}
-    .logo-text{font-family:var(--font-display);font-size:var(--text-lg);font-weight:800;letter-spacing:-.02em}
-    .logo-text span{color:var(--color-primary)}
-    .header-right{margin-left:auto;display:flex;align-items:center;gap:var(--space-3)}
-    .rezept-count{font-size:var(--text-xs);color:var(--color-text-faint);white-space:nowrap}
-    .save-badge{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);color:var(--color-success);opacity:0;transition:opacity .3s}
-    .save-badge.show{opacity:1}
-    .btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;text-decoration:none}
-    .btn-primary{background:var(--color-primary);color:#fff}
-    .btn-primary:hover{background:var(--color-primary-hover)}
-    .btn-ghost{color:var(--color-text-muted);padding:var(--space-2)}
-    .btn-ghost:hover{color:var(--color-text);background:var(--color-surface-offset)}
-    .btn-sm{padding:var(--space-1) var(--space-3);font-size:var(--text-xs)}
-    .btn-danger{background:oklch(from var(--color-error) l c h /.12);color:var(--color-error)}
-    .btn-danger:hover{background:oklch(from var(--color-error) l c h /.2)}
-    .btn-pdf{background:oklch(from var(--color-warning) l c h/.12);color:var(--color-warning)}
-    .btn-pdf:hover{background:oklch(from var(--color-warning) l c h/.22)}
-    main{padding:var(--space-8) var(--space-6);max-width:1200px;margin-inline:auto;width:100%}
+    header{position:sticky;top:0;z-index:100;background:var(--surf);border-bottom:1px solid var(--div);box-shadow:var(--shsm);padding:.75rem 1.5rem;display:flex;align-items:center;gap:1rem}
+    .logo{display:flex;align-items:center;gap:.5rem;text-decoration:none;color:var(--tx)}
+    .logo-text{font-family:var(--fd);font-size:var(--txl);font-weight:800;letter-spacing:-.02em}
+    .logo-text span{color:var(--pr)}
+    .hdr-right{margin-left:auto;display:flex;align-items:center;gap:.75rem}
+    .rcount{font-size:var(--txs);color:var(--txf);white-space:nowrap}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-radius:var(--r2);font-size:var(--txsm);font-weight:500}
+    .btn-pr{background:var(--pr);color:#fff} .btn-pr:hover{background:var(--prh)}
+    .btn-gh{color:var(--txm);padding:.5rem} .btn-gh:hover{color:var(--tx);background:var(--surf3)}
+    .btn-sm{padding:.25rem .75rem;font-size:var(--txs)}
+    .btn-danger{background:oklch(from var(--err) l c h/.12);color:var(--err)} .btn-danger:hover{background:oklch(from var(--err) l c h/.22)}
+    .btn-pdf{background:oklch(from var(--warn) l c h/.12);color:var(--warn)} .btn-pdf:hover{background:oklch(from var(--warn) l c h/.22)}
+    main{padding:2rem 1.5rem;max-width:1200px;margin-inline:auto;width:100%}
 
-    /* ─── API-Status ─────────────────────────────────────────── */
-    .api-banner{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5);border-radius:var(--radius-lg);font-size:var(--text-sm);margin-bottom:var(--space-5)}
-    .api-banner.ok{background:oklch(from var(--color-success) l c h/.1);color:var(--color-success)}
-    .api-banner.err{background:oklch(from var(--color-warning) l c h/.1);color:var(--color-warning)}
-    .api-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+    /* ── Banner ── */
+    .banner{display:flex;align-items:center;gap:.75rem;padding:.75rem 1.25rem;border-radius:var(--r3);font-size:var(--txsm);margin-bottom:1.25rem}
+    .banner.ok{background:oklch(from var(--ok) l c h/.1);color:var(--ok)}
+    .banner.err{background:oklch(from var(--warn) l c h/.1);color:var(--warn)}
+    .dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
 
-    /* ─── Toolbar ────────────────────────────────────────────── */
-    .toolbar{display:flex;gap:var(--space-3);margin-bottom:var(--space-6);flex-wrap:wrap;align-items:center}
-    .search-wrap{position:relative;flex:1;min-width:200px}
-    .search-wrap svg{position:absolute;left:var(--space-3);top:50%;transform:translateY(-50%);color:var(--color-text-muted);pointer-events:none}
-    .search-input{width:100%;padding:var(--space-2) var(--space-3) var(--space-2) calc(var(--space-3)*3);border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);font-size:var(--text-sm)}
-    .search-input:focus{border-color:var(--color-primary);box-shadow:0 0 0 3px var(--color-primary-highlight);outline:none}
-    .filter-select{padding:var(--space-2) var(--space-4);border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);font-size:var(--text-sm);cursor:pointer}
-    .filter-select:focus{border-color:var(--color-primary);outline:none}
+    /* ── Toolbar ── */
+    .toolbar{display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center}
+    .swrap{position:relative;flex:1;min-width:200px}
+    .swrap svg{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--txm);pointer-events:none}
+    .sinput{width:100%;padding:.5rem .75rem .5rem 2.25rem;border:1px solid var(--brd);border-radius:var(--r2);background:var(--surf);font-size:var(--txsm)}
+    .sinput:focus{border-color:var(--pr);box-shadow:0 0 0 3px var(--prhl);outline:none}
+    .fsel{padding:.5rem 1rem;border:1px solid var(--brd);border-radius:var(--r2);background:var(--surf);font-size:var(--txsm);cursor:pointer}
+    .fsel:focus{border-color:var(--pr);outline:none}
 
-    /* ─── Grid & Card ────────────────────────────────────────── */
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:var(--space-5)}
-    .card{background:var(--color-surface);border:1px solid oklch(from var(--color-text) l c h/.08);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;transition:box-shadow var(--transition),transform var(--transition)}
-    .card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
-    .card-img{width:100%;height:160px;object-fit:cover;display:block}
-    .card-img-placeholder{width:100%;height:160px;background:var(--color-surface-offset);display:flex;align-items:center;justify-content:center;color:var(--color-text-faint)}
-    .card-body{padding:var(--space-4) var(--space-5)}
-    .card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-2);margin-bottom:var(--space-3)}
-    .card-title{font-size:var(--text-lg);font-weight:700;color:var(--color-text)}
-    .badge{display:inline-flex;align-items:center;padding:2px var(--space-2);border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:500;white-space:nowrap;background:var(--color-primary-highlight);color:var(--color-primary)}
-    .card-meta{display:flex;gap:var(--space-4);color:var(--color-text-muted);font-size:var(--text-xs);margin-bottom:var(--space-3)}
-    .meta-item{display:flex;align-items:center;gap:var(--space-1)}
-    .card-preview{font-size:var(--text-sm);color:var(--color-text-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .card-actions{display:flex;gap:var(--space-2);margin-top:var(--space-4);padding-top:var(--space-3);border-top:1px solid var(--color-divider)}
+    /* ── Grid & Card ── */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:1.25rem}
+    .card{background:var(--surf);border:1px solid oklch(from var(--tx) l c h/.08);border-radius:var(--r4);overflow:hidden;box-shadow:var(--shsm);cursor:pointer;transition:box-shadow var(--tr),transform var(--tr)}
+    .card:hover{box-shadow:var(--shmd);transform:translateY(-2px)}
+    .cimg{width:100%;height:160px;object-fit:cover}
+    .cph{width:100%;height:160px;background:var(--surf3);display:flex;align-items:center;justify-content:center;color:var(--txf)}
+    .cbody{padding:1rem 1.25rem}
+    .chdr{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.75rem}
+    .ctitle{font-size:var(--txl);font-weight:700}
+    .badge{display:inline-flex;align-items:center;padding:2px .5rem;border-radius:9999px;font-size:var(--txs);font-weight:500;background:var(--prhl);color:var(--pr)}
+    .cmeta{display:flex;gap:1rem;color:var(--txm);font-size:var(--txs);margin-bottom:.75rem}
+    .mi{display:flex;align-items:center;gap:.25rem}
+    .cprev{font-size:var(--txsm);color:var(--txm);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .cact{display:flex;gap:.5rem;margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--div)}
 
-    /* ─── Empty / Loading ────────────────────────────────────── */
-    .empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:var(--space-16) var(--space-8);color:var(--color-text-muted)}
-    .empty svg{color:var(--color-text-faint);margin-bottom:var(--space-4)}
-    .empty h3{font-family:var(--font-display);font-size:var(--text-lg);color:var(--color-text);margin-bottom:var(--space-2)}
-    .empty p{max-width:36ch;margin-bottom:var(--space-6)}
+    /* ── Empty / Skeleton ── */
+    .empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:4rem 2rem;color:var(--txm)}
+    .empty svg{color:var(--txf);margin-bottom:1rem}
+    .empty h3{font-family:var(--fd);font-size:var(--txl);color:var(--tx);margin-bottom:.5rem}
+    .empty p{max-width:36ch;margin-bottom:1.5rem}
     @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-    .skeleton{background:linear-gradient(90deg,var(--color-surface-offset) 25%,var(--color-surface-2) 50%,var(--color-surface-offset) 75%);background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;border-radius:var(--radius-sm)}
-    .skel-card{background:var(--color-surface);border:1px solid oklch(from var(--color-text) l c h/.08);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-sm)}
-    .skel-img{height:160px;width:100%}
-    .skel-body{padding:var(--space-4) var(--space-5)}
-    .skel-line{height:.875rem;margin-bottom:var(--space-2)}
-    .skel-line.wide{width:70%}.skel-line.short{width:40%}.skel-line.med{width:55%}
+    .sk{background:linear-gradient(90deg,var(--surf3) 25%,var(--surf2) 50%,var(--surf3) 75%);background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;border-radius:var(--r1)}
+    .skc{background:var(--surf);border:1px solid oklch(from var(--tx) l c h/.08);border-radius:var(--r4);overflow:hidden}
+    .skimg{height:160px;width:100%}
+    .skbody{padding:1rem 1.25rem}
+    .skl{height:.875rem;margin-bottom:.5rem}
+    .skl.w70{width:70%}.skl.w40{width:40%}.skl.w55{width:55%}
 
-    /* ─── Modal ──────────────────────────────────────────────── */
-    .overlay{position:fixed;inset:0;background:oklch(.1 0 0/.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:var(--space-4);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity var(--transition)}
-    .overlay.open{opacity:1;pointer-events:all}
-    .modal{background:var(--color-surface);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);width:100%;max-width:680px;max-height:92dvh;display:flex;flex-direction:column;transform:translateY(12px);transition:transform var(--transition)}
-    .overlay.open .modal{transform:translateY(0)}
-    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:var(--space-5) var(--space-6);border-bottom:1px solid var(--color-divider);flex-shrink:0}
-    .modal-title{font-family:var(--font-display);font-size:var(--text-lg);font-weight:700}
-    .modal-body{padding:var(--space-6);overflow-y:auto;display:flex;flex-direction:column;gap:var(--space-5)}
-    .modal-footer{padding:var(--space-4) var(--space-6);border-top:1px solid var(--color-divider);display:flex;justify-content:flex-end;gap:var(--space-3);flex-shrink:0}
+    /* ── Modal ── */
+    .ov{position:fixed;inset:0;background:oklch(.1 0 0/.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity var(--tr)}
+    .ov.open{opacity:1;pointer-events:all}
+    .modal{background:var(--surf);border-radius:var(--r4);box-shadow:var(--shlg);width:100%;max-width:700px;max-height:92dvh;display:flex;flex-direction:column;transform:translateY(10px);transition:transform var(--tr)}
+    .ov.open .modal{transform:translateY(0)}
+    .mhdr{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid var(--div);flex-shrink:0}
+    .mtitle{font-family:var(--fd);font-size:var(--txl);font-weight:700}
+    .mbody{padding:1.5rem;overflow-y:auto;display:flex;flex-direction:column;gap:1.25rem}
+    .mfoot{padding:1rem 1.5rem;border-top:1px solid var(--div);display:flex;justify-content:flex-end;gap:.75rem;flex-shrink:0}
 
-    /* ─── Form ───────────────────────────────────────────────── */
-    .form-group{display:flex;flex-direction:column;gap:var(--space-1)}
-    label{font-size:var(--text-sm);font-weight:500;color:var(--color-text-muted)}
-    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)}
-    .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-3)}
-    input[type=text],input[type=number],select,textarea{width:100%;padding:var(--space-2) var(--space-3);border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface-2);font-size:var(--text-sm)}
-    input:focus,select:focus,textarea:focus{border-color:var(--color-primary);box-shadow:0 0 0 3px var(--color-primary-highlight);outline:none}
+    /* ── Form ── */
+    .fg{display:flex;flex-direction:column;gap:.25rem}
+    label{font-size:var(--txsm);font-weight:500;color:var(--txm)}
+    .frow{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    input[type=text],input[type=number],select,textarea{width:100%;padding:.5rem .75rem;border:1px solid var(--brd);border-radius:var(--r2);background:var(--surf2);font-size:var(--txsm)}
+    input:focus,select:focus,textarea:focus{border-color:var(--pr);box-shadow:0 0 0 3px var(--prhl);outline:none}
     textarea{resize:vertical;min-height:80px}
 
-    /* ─── Bild Upload ────────────────────────────────────────── */
-    .img-drop-zone{position:relative;border:2px dashed var(--color-border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:border-color var(--transition),background var(--transition)}
-    .img-drop-zone:hover,.img-drop-zone.drag-over{border-color:var(--color-primary);background:var(--color-primary-highlight)}
-    .img-drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-    .img-drop-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-2);color:var(--color-text-faint);font-size:var(--text-sm);padding:var(--space-8) var(--space-4);text-align:center;pointer-events:none}
-    .img-drop-placeholder svg{color:var(--color-primary);opacity:.5}
-    .img-drop-placeholder strong{color:var(--color-text-muted);font-weight:500}
-    .img-drop-placeholder span{font-size:var(--text-xs)}
-    .img-preview-wrap{position:relative;border-radius:var(--radius-lg);overflow:hidden}
-    .img-preview{width:100%;height:200px;object-fit:cover;display:block}
-    .img-remove{position:absolute;top:var(--space-2);right:var(--space-2);background:oklch(.1 0 0/.65);color:#fff;border-radius:var(--radius-full);width:30px;height:30px;display:flex;align-items:center;justify-content:center}
-    .img-remove:hover{background:oklch(.1 0 0/.85)}
-    .img-change-btn{position:absolute;bottom:var(--space-2);left:50%;transform:translateX(-50%);background:oklch(.1 0 0/.65);color:#fff;border-radius:var(--radius-md);padding:var(--space-1) var(--space-3);font-size:var(--text-xs);font-weight:500;white-space:nowrap}
-    .img-change-btn:hover{background:oklch(.1 0 0/.85)}
-    .img-change-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    /* ── Bild Upload ── */
+    .dropz{position:relative;border:2px dashed var(--brd);border-radius:var(--r3);overflow:hidden;cursor:pointer;transition:border-color var(--tr),background var(--tr)}
+    .dropz:hover,.dropz.drag{border-color:var(--pr);background:var(--prhl)}
+    .dropz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .dropph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;color:var(--txf);font-size:var(--txsm);padding:2rem 1rem;text-align:center;pointer-events:none}
+    .dropph strong{color:var(--txm);font-weight:500}
+    .dropph span{font-size:var(--txs)}
+    .prevwrap{position:relative;border-radius:var(--r3);overflow:hidden}
+    .previmg{width:100%;height:200px;object-fit:cover}
+    .prevdel{position:absolute;top:.5rem;right:.5rem;background:oklch(.1 0 0/.7);color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+    .prevdel:hover{background:oklch(.1 0 0/.9)}
+    .prevchg{position:absolute;bottom:.5rem;left:50%;transform:translateX(-50%);background:oklch(.1 0 0/.7);color:#fff;border-radius:var(--r2);padding:.25rem .75rem;font-size:var(--txs);font-weight:500;white-space:nowrap}
+    .prevchg input{position:absolute;inset:0;opacity:0;cursor:pointer}
 
-    .zutat-header{display:grid;grid-template-columns:80px 140px 1fr 32px;gap:var(--space-2);font-size:var(--text-xs);color:var(--color-text-faint);padding:0 0 var(--space-1);letter-spacing:.03em;text-transform:uppercase}
-    .zutaten-list{display:flex;flex-direction:column;gap:var(--space-2)}
-    .zutat-row{display:grid;grid-template-columns:80px 140px 1fr 32px;gap:var(--space-2);align-items:center}
-    .zutat-row input[type=text],.zutat-row input[type=number]{padding:var(--space-2) var(--space-2)}
-    .zutat-row select{padding:var(--space-2) var(--space-2)}
-    .add-row-btn{align-self:flex-start;color:var(--color-primary);font-size:var(--text-sm);font-weight:500;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm)}
-    .add-row-btn:hover{background:var(--color-primary-highlight)}
-    .del-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--radius-md);color:var(--color-error)}
-    .del-btn:hover{background:oklch(from var(--color-error) l c h/.1)}
-    .schritte-list{display:flex;flex-direction:column;gap:var(--space-2)}
-    .schritt-row{display:flex;gap:var(--space-2);align-items:flex-start}
-    .schritt-num{flex:0 0 28px;height:28px;border-radius:var(--radius-full);background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);font-weight:700;margin-top:6px}
-    .schritt-row textarea{flex:1}
+    /* ── Zutaten ── */
+    .zhdr{display:grid;grid-template-columns:80px 150px 1fr 32px;gap:.5rem;font-size:var(--txs);color:var(--txf);padding:0 0 .25rem;letter-spacing:.03em;text-transform:uppercase}
+    .zlist{display:flex;flex-direction:column;gap:.5rem}
+    .zrow{display:grid;grid-template-columns:80px 150px 1fr 32px;gap:.5rem;align-items:center}
+    .zrow input,.zrow select{padding:.4rem .5rem}
+    .addrow{align-self:flex-start;color:var(--pr);font-size:var(--txsm);font-weight:500;padding:.25rem .5rem;border-radius:var(--r1)}
+    .addrow:hover{background:var(--prhl)}
+    .delbtn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--r2);color:var(--err)}
+    .delbtn:hover{background:oklch(from var(--err) l c h/.12)}
+    .slist{display:flex;flex-direction:column;gap:.5rem}
+    .srow{display:flex;gap:.5rem;align-items:flex-start}
+    .snum{flex:0 0 28px;height:28px;border-radius:50%;background:var(--pr);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--txs);font-weight:700;margin-top:5px}
+    .srow textarea{flex:1}
 
-    /* ─── Detail ─────────────────────────────────────────────── */
-    .detail-overlay{position:fixed;inset:0;background:oklch(.1 0 0/.5);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:var(--space-6) var(--space-4);backdrop-filter:blur(4px);overflow-y:auto;opacity:0;pointer-events:none;transition:opacity var(--transition)}
-    .detail-overlay.open{opacity:1;pointer-events:all}
-    .detail-card{background:var(--color-surface);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);width:100%;max-width:720px;overflow:hidden;position:relative;transform:translateY(12px);transition:transform var(--transition)}
-    .detail-overlay.open .detail-card{transform:translateY(0)}
-    .detail-hero{width:100%;height:280px;object-fit:cover;display:block}
-    .detail-hero-placeholder{width:100%;height:80px;background:var(--color-surface-offset);display:flex;align-items:center;justify-content:center;color:var(--color-text-faint)}
-    .detail-content{padding:var(--space-6) var(--space-8)}
-    .detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
-    .detail-title{font-family:var(--font-display);font-size:var(--text-xl);font-weight:800}
-    .detail-meta{display:flex;gap:var(--space-5);color:var(--color-text-muted);font-size:var(--text-sm);margin-bottom:var(--space-6);flex-wrap:wrap}
-    .detail-section{margin-bottom:var(--space-6)}
-    .detail-section-title{font-family:var(--font-display);font-size:var(--text-base);font-weight:700;margin-bottom:var(--space-3);padding-bottom:var(--space-2);border-bottom:1px solid var(--color-divider)}
-    .zutat-item{display:flex;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid oklch(from var(--color-text) l c h/.05);font-size:var(--text-sm)}
-    .zutat-menge{color:var(--color-text-muted);min-width:140px;flex-shrink:0}
-    .schritt-item{display:flex;gap:var(--space-3);margin-bottom:var(--space-4);font-size:var(--text-sm)}
-    .schritt-item p{max-width:none}
-    .detail-actions{display:flex;gap:var(--space-3);padding-top:var(--space-5);border-top:1px solid var(--color-divider);flex-wrap:wrap}
+    /* ── Detail ── */
+    .dov{position:fixed;inset:0;background:oklch(.1 0 0/.55);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:1.5rem 1rem;backdrop-filter:blur(4px);overflow-y:auto;opacity:0;pointer-events:none;transition:opacity var(--tr)}
+    .dov.open{opacity:1;pointer-events:all}
+    .dcard{background:var(--surf);border-radius:var(--r4);box-shadow:var(--shlg);width:100%;max-width:720px;overflow:hidden;transform:translateY(10px);transition:transform var(--tr)}
+    .dov.open .dcard{transform:translateY(0)}
+    .dhero{width:100%;height:280px;object-fit:cover}
+    .dhero-ph{width:100%;height:80px;background:var(--surf3);display:flex;align-items:center;justify-content:center;color:var(--txf)}
+    .dcontent{padding:1.5rem 2rem}
+    .dhead{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.75rem}
+    .dtitle{font-family:var(--fd);font-size:var(--txxl);font-weight:800}
+    .dmeta{display:flex;gap:1.25rem;color:var(--txm);font-size:var(--txsm);margin-bottom:1.5rem;flex-wrap:wrap}
+    .dsec{margin-bottom:1.5rem}
+    .dsectitle{font-family:var(--fd);font-size:var(--txb);font-weight:700;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--div)}
+    .zi{display:flex;gap:.75rem;padding:.5rem 0;border-bottom:1px solid oklch(from var(--tx) l c h/.05);font-size:var(--txsm)}
+    .zmenge{color:var(--txm);min-width:150px;flex-shrink:0}
+    .sti{display:flex;gap:.75rem;margin-bottom:1rem;font-size:var(--txsm)}
+    .sti p{max-width:none}
+    .dact{display:flex;gap:.75rem;padding-top:1.25rem;border-top:1px solid var(--div);flex-wrap:wrap}
 
-    /* ─── Toast ──────────────────────────────────────────────── */
-    .toast-wrap{position:fixed;bottom:var(--space-6);right:var(--space-6);z-index:300;display:flex;flex-direction:column;gap:var(--space-2)}
-    .toast{padding:var(--space-3) var(--space-5);border-radius:var(--radius-lg);font-size:var(--text-sm);font-weight:500;color:#fff;box-shadow:var(--shadow-lg);animation:slideIn .2s ease;max-width:320px}
-    .toast.success{background:var(--color-success)}.toast.error{background:var(--color-error)}
+    /* ── Toast ── */
+    .twrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:300;display:flex;flex-direction:column;gap:.5rem}
+    .toast{padding:.75rem 1.25rem;border-radius:var(--r3);font-size:var(--txsm);font-weight:500;color:#fff;box-shadow:var(--shlg);animation:slideIn .2s ease;max-width:320px}
+    .toast.ok{background:var(--ok)}.toast.err{background:var(--err)}
     @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 
-    /* ─── PDF / Print ────────────────────────────────────────── */
-    @media print {
+    /* ── Print / PDF ── */
+    @media print{
       *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
       body{background:#fff !important;color:#111 !important;font-family:Georgia,serif}
-      .app > header,.toolbar,.card-actions,.detail-actions,.toast-wrap{display:none !important}
-      .detail-overlay{position:static !important;opacity:1 !important;pointer-events:all !important;padding:0 !important;background:none !important;backdrop-filter:none !important;display:block !important}
-      .detail-card{box-shadow:none !important;border-radius:0 !important;max-width:100% !important;transform:none !important}
-      .detail-hero{height:220px;object-fit:cover}
-      .detail-content{padding:1.5rem 2rem}
-      .detail-title{font-size:1.8rem;color:#111}
-      .detail-section-title{color:#01696f;border-bottom:1px solid #ccc}
-      .badge{border:1px solid #01696f;background:#e0f0ef;color:#01696f;padding:2px 8px;border-radius:999px}
-      .zutat-item{border-bottom:1px solid #eee}
-      .schritt-num{background:#01696f !important;color:#fff !important;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0}
-      /* Alles andere ausblenden */
-      .overlay,.formOverlay,#apiBanner,.grid,main > *:not(#detailOverlay){display:none !important}
-      .pdf-print-header{display:block !important;padding:1rem 2rem .5rem;font-size:.75rem;color:#888;border-bottom:1px solid #ddd;margin-bottom:1rem}
+      header,.toolbar,.cact,.dact,.twrap{display:none !important}
+      .dov{position:static !important;opacity:1 !important;pointer-events:all !important;padding:0 !important;background:none !important;backdrop-filter:none !important;display:block !important}
+      .dcard{box-shadow:none !important;border-radius:0 !important;max-width:100% !important;transform:none !important}
+      .dhero{height:200px}
+      .dcontent{padding:1.5rem 2rem}
+      .dtitle{font-size:1.8rem}
+      .dsectitle{color:#01696f;border-bottom:1px solid #ccc}
+      .zi{border-bottom:1px solid #eee}
+      .snum{background:#01696f !important;color:#fff !important;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
+      .ov,.dov:not(#detailOv),.grid,main>*:not(#detailOv){display:none !important}
+      .pdfhdr{display:block !important;padding:.5rem 2rem;font-size:.7rem;color:#999;border-bottom:1px solid #ddd;margin-bottom:.5rem}
     }
-    .pdf-print-header{display:none}
+    .pdfhdr{display:none}
 
     @media(max-width:600px){
-      header{padding:var(--space-3) var(--space-4)}
-      main{padding:var(--space-5) var(--space-4)}
-      .form-row,.form-row-3{grid-template-columns:1fr}
-      .zutat-header{grid-template-columns:70px 1fr 32px}
-      .zutat-header .col-einheit{display:none}
-      .zutat-row{grid-template-columns:70px 1fr 32px}
-      .zutat-row .einheit-sel{display:none}
-      .detail-content{padding:var(--space-5)}
-      .detail-hero{height:200px}
-      .rezept-count{display:none}
+      header{padding:.75rem 1rem} main{padding:1.25rem 1rem}
+      .frow{grid-template-columns:1fr}
+      .zhdr{grid-template-columns:70px 1fr 32px} .zhdr .ceinheit{display:none}
+      .zrow{grid-template-columns:70px 1fr 32px} .zrow .einsel{display:none}
+      .dcontent{padding:1.25rem}
+      .dtitle{font-size:1.4rem}
     }
   </style>
 </head>
@@ -229,36 +207,33 @@
 <div class="app">
   <header>
     <a class="logo" href="#" onclick="return false">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-label="Rezeptbuch Logo">
-        <rect width="28" height="28" rx="7" fill="var(--color-primary)"/>
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-label="Logo">
+        <rect width="28" height="28" rx="7" fill="var(--pr)"/>
         <path d="M8 8h12M8 14h8M8 20h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
         <circle cx="20" cy="20" r="3" fill="#fff"/>
       </svg>
       <span class="logo-text">Rezept<span>buch</span></span>
     </a>
-    <span class="rezept-count" id="rezeptCount"></span>
-    <span class="save-badge" id="saveBadge">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-      Gespeichert
-    </span>
-    <div class="header-right">
-      <button class="btn btn-primary" onclick="openForm()">
+    <span class="rcount" id="rcount"></span>
+    <div class="hdr-right">
+      <button class="btn btn-pr" onclick="openForm()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         Neues Rezept
       </button>
-      <button class="btn btn-ghost" data-theme-toggle aria-label="Hell/Dunkel">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <button class="btn btn-gh" id="themeBtn" data-theme-toggle aria-label="Theme wechseln">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
     </div>
   </header>
+
   <main>
     <div id="apiBanner"></div>
     <div class="toolbar">
-      <div class="search-wrap">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-input" id="searchInput" type="search" placeholder="Rezepte suchen…" oninput="filterRezepte()">
+      <div class="swrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="sinput" id="search" type="search" placeholder="Rezepte suchen…" oninput="filterAll()">
       </div>
-      <select class="filter-select" id="katFilter" onchange="filterRezepte()">
+      <select class="fsel" id="katF" onchange="filterAll()">
         <option value="">Alle Kategorien</option>
         <option>Frühstück</option><option>Mittagessen</option><option>Abendessen</option>
         <option>Dessert</option><option>Snacks</option><option>Getränke</option><option>Sonstiges</option>
@@ -268,102 +243,100 @@
   </main>
 </div>
 
-<!-- FORMULAR MODAL -->
-<div class="overlay" id="formOverlay" onclick="closeFormOnBg(event)">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-header">
-      <span class="modal-title" id="modalTitle">Neues Rezept</span>
-      <button class="btn btn-ghost" onclick="closeForm()" aria-label="Schliessen">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+<!-- FORM MODAL -->
+<div class="ov" id="formOv" onclick="closeFBg(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+    <div class="mhdr">
+      <span class="mtitle" id="mtitle">Neues Rezept</span>
+      <button class="btn btn-gh" onclick="closeF()" aria-label="Schliessen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="modal-body">
+    <div class="mbody">
       <input type="hidden" id="editId">
 
-      <!-- ── Bild Upload ── -->
-      <div class="form-group">
+      <div class="fg">
         <label>Foto (optional)</label>
-        <div id="imgDropZone" class="img-drop-zone" role="button" aria-label="Bild hochladen">
-          <input type="file" id="fBild" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onchange="previewBild(this)" aria-label="Bild auswählen">
-          <div class="img-drop-placeholder" id="imgPlaceholder">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
+        <div id="dropz" class="dropz">
+          <input type="file" id="fBild" accept="image/*" onchange="prevBild(this)">
+          <div class="dropph" id="dropph">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             <strong>Klicken oder Bild hierher ziehen</strong>
-            <span>JPG, PNG, WebP, AVIF · max. 8 MB</span>
+            <span>JPG, PNG, WebP · max. 8 MB</span>
           </div>
         </div>
-        <div id="imgPreviewWrap" style="display:none"></div>
+        <div id="prevwrap" style="display:none"></div>
       </div>
 
-      <div class="form-group">
-        <label for="fTitel">Titel *</label>
-        <input type="text" id="fTitel" placeholder="z.B. Spaghetti Carbonara">
+      <div class="fg">
+        <label for="fT">Titel *</label>
+        <input type="text" id="fT" placeholder="z.B. Spaghetti Carbonara">
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="fKat">Kategorie</label>
-          <select id="fKat"><option>Frühstück</option><option>Mittagessen</option><option selected>Abendessen</option><option>Dessert</option><option>Snacks</option><option>Getränke</option><option>Sonstiges</option></select>
+      <div class="frow">
+        <div class="fg">
+          <label for="fK">Kategorie</label>
+          <select id="fK"><option>Frühstück</option><option>Mittagessen</option><option selected>Abendessen</option><option>Dessert</option><option>Snacks</option><option>Getränke</option><option>Sonstiges</option></select>
         </div>
-        <div class="form-row" style="gap:var(--space-3)">
-          <div class="form-group"><label for="fPortionen">Portionen</label><input type="number" id="fPortionen" value="2" min="1" max="99"></div>
-          <div class="form-group"><label for="fZeit">Zeit (Min.)</label><input type="number" id="fZeit" value="30" min="1" max="999"></div>
+        <div class="frow" style="gap:.75rem">
+          <div class="fg"><label for="fP">Portionen</label><input type="number" id="fP" value="2" min="1" max="99"></div>
+          <div class="fg"><label for="fZ">Zeit (Min.)</label><input type="number" id="fZ" value="30" min="1" max="999"></div>
         </div>
       </div>
-      <div class="form-group">
+
+      <div class="fg">
         <label>Zutaten</label>
-        <div class="zutat-header"><span>Menge</span><span class="col-einheit">Einheit</span><span>Zutat</span><span></span></div>
-        <div class="zutaten-list" id="zutatenList"></div>
-        <button class="add-row-btn" type="button" onclick="addZutat()">+ Zutat hinzufügen</button>
+        <div class="zhdr"><span>Menge</span><span class="ceinheit">Einheit</span><span>Zutat</span><span></span></div>
+        <div class="zlist" id="zlist"></div>
+        <button class="addrow" type="button" onclick="addZ()">+ Zutat hinzufügen</button>
       </div>
-      <div class="form-group">
+
+      <div class="fg">
         <label>Zubereitung</label>
-        <div class="schritte-list" id="schritteList"></div>
-        <button class="add-row-btn" type="button" onclick="addSchritt()">+ Schritt hinzufügen</button>
+        <div class="slist" id="slist"></div>
+        <button class="addrow" type="button" onclick="addS()">+ Schritt hinzufügen</button>
       </div>
-      <div class="form-group">
-        <label for="fNotizen">Notizen &amp; Tipps</label>
-        <textarea id="fNotizen" placeholder="Tipps, Variationen, Allergene…"></textarea>
+
+      <div class="fg">
+        <label for="fN">Notizen &amp; Tipps</label>
+        <textarea id="fN" placeholder="Tipps, Variationen, Allergene…"></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeForm()">Abbrechen</button>
-      <button class="btn btn-primary" id="saveBtn" onclick="saveRezept()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <div class="mfoot">
+      <button class="btn btn-gh" onclick="closeF()">Abbrechen</button>
+      <button class="btn btn-pr" id="saveBtn" onclick="saveR()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Speichern
       </button>
     </div>
   </div>
 </div>
 
-<!-- DETAIL OVERLAY -->
-<div class="detail-overlay" id="detailOverlay" onclick="closeDetailOnBg(event)">
-  <div class="detail-card">
-    <div class="pdf-print-header" id="pdfPrintHeader">Rezeptbuch · gedruckt am <span id="pdfDate"></span></div>
-    <div id="dHeroWrap"></div>
-    <div class="detail-content">
-      <div class="detail-head">
+<!-- DETAIL -->
+<div class="dov" id="detailOv" onclick="closeDOvBg(event)">
+  <div class="dcard">
+    <div class="pdfhdr">Rezeptbuch · <span id="pdfDate"></span></div>
+    <div id="dhero"></div>
+    <div class="dcontent">
+      <div class="dhead">
         <div>
-          <div id="dBadge" class="badge" style="margin-bottom:var(--space-2)"></div>
-          <h1 class="detail-title" id="dTitel"></h1>
+          <div id="dbadge" class="badge" style="margin-bottom:.5rem"></div>
+          <h1 class="dtitle" id="dtitle"></h1>
         </div>
-        <button class="btn btn-ghost" onclick="closeDetail()" aria-label="Schliessen">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        <button class="btn btn-gh" onclick="closeD()" aria-label="Schliessen">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
-      <div class="detail-meta" id="dMeta"></div>
-      <div class="detail-section"><div class="detail-section-title">Zutaten</div><div id="dZutaten"></div></div>
-      <div class="detail-section"><div class="detail-section-title">Zubereitung</div><div id="dSchritte"></div></div>
-      <div class="detail-section" id="dNotizenSection" style="display:none">
-        <div class="detail-section-title">Notizen</div>
-        <p id="dNotizen" style="font-size:var(--text-sm);color:var(--color-text-muted)"></p>
+      <div class="dmeta" id="dmeta"></div>
+      <div class="dsec"><div class="dsectitle">Zutaten</div><div id="dzutaten"></div></div>
+      <div class="dsec"><div class="dsectitle">Zubereitung</div><div id="dschritte"></div></div>
+      <div class="dsec" id="dnotsec" style="display:none">
+        <div class="dsectitle">Notizen</div>
+        <p id="dnotizen" style="font-size:var(--txsm);color:var(--txm)"></p>
       </div>
-      <div class="detail-actions">
-        <button class="btn btn-primary" id="dEditBtn">Bearbeiten</button>
-        <button class="btn btn-pdf" id="dPdfBtn" onclick="exportPdf()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      <div class="dact">
+        <button class="btn btn-pr" id="dEditBtn">Bearbeiten</button>
+        <button class="btn btn-pdf" onclick="exportPdf()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           Als PDF
         </button>
         <button class="btn btn-danger" id="dDelBtn">Löschen</button>
@@ -372,429 +345,312 @@
   </div>
 </div>
 
-<div class="toast-wrap" id="toastWrap"></div>
+<div class="twrap" id="twrap"></div>
 
 <script>
-// ════════════════════════════════════════════════════════
-//  CONFIG
-//  API = '' → relative URLs → nginx-Proxy leitet /api/* und /health
-//  an den Backend-Container weiter. KEIN direkter localhost:3001-Zugriff.
-// ════════════════════════════════════════════════════════
-const API = '';
-const STORE_KEY = 'rezeptbuch_v3_offline';
-
+// ─── Config ───────────────────────────────────────────────
+const API = '';  // Relative URLs → nginx-Proxy → backend:3001
 let alle = [];
-let bildBase64 = null;
-let apiOnline = false;
+let bildB64 = null;
+let apiOk = false;
 
-// ════════════════════════════════════════════════════════
-//  API-Wrapper (mit localStorage-Fallback)
-// ════════════════════════════════════════════════════════
+// ─── API ──────────────────────────────────────────────────
 async function apiFetch(path, opts = {}) {
-  const res = await fetch(API + path, {
-    headers: { 'Content-Type': 'application/json' },
-    ...opts,
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  const r = await fetch(API + path, { headers:{'Content-Type':'application/json'}, ...opts });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
 }
-
 async function checkApi() {
-  try {
-    await apiFetch('/health');
-    apiOnline = true;
-  } catch {
-    apiOnline = false;
-  }
-  renderApiBanner();
-}
-
-function renderApiBanner() {
+  try { await fetch('/health'); apiOk = true; } catch { apiOk = false; }
   const el = document.getElementById('apiBanner');
-  if (apiOnline) {
-    el.innerHTML = `<div class="api-banner ok"><div class="api-dot"></div>Backend verbunden — Rezepte werden in der Datenbank gespeichert.</div>`;
-  } else {
-    el.innerHTML = `<div class="api-banner err"><div class="api-dot"></div>Backend nicht erreichbar — Daten werden lokal im Browser gespeichert (Offline-Modus).</div>`;
-  }
+  el.innerHTML = apiOk
+    ? `<div class="banner ok"><div class="dot"></div>Backend verbunden — Rezepte werden in der Datenbank gespeichert.</div>`
+    : `<div class="banner err"><div class="dot"></div>Backend nicht erreichbar — Offline-Modus (Browser-Speicher).</div>`;
 }
 
-// ════════════════════════════════════════════════════════
-//  DATEN laden / speichern
-// ════════════════════════════════════════════════════════
-function ladeLokal() {
-  try { const r = localStorage.getItem(STORE_KEY); alle = r ? JSON.parse(r) : []; } catch { alle = []; }
-}
-function speichereLokal() {
-  localStorage.setItem(STORE_KEY, JSON.stringify(alle));
-  showSaveBadge();
-}
-function showSaveBadge() {
-  const b = document.getElementById('saveBadge');
-  b.classList.add('show');
-  clearTimeout(b._t);
-  b._t = setTimeout(() => b.classList.remove('show'), 2200);
-}
-function nextId() {
-  return alle.length ? Math.max(...alle.map(r => r.id)) + 1 : 1;
+// ─── Lokaler Fallback ─────────────────────────────────────
+function loadLocal() { try { alle = JSON.parse(localStorage.getItem('rzb_v4')||'[]'); } catch { alle=[]; } }
+function saveLocal() { localStorage.setItem('rzb_v4', JSON.stringify(alle)); }
+function nextId() { return alle.length ? Math.max(...alle.map(r=>r.id))+1 : 1; }
+async function loadData() {
+  if (apiOk) { try { alle = await apiFetch('/api/rezepte'); return; } catch {} }
+  loadLocal();
 }
 
-async function ladeDaten() {
-  if (apiOnline) {
-    try {
-      alle = await apiFetch('/api/rezepte');
-      return;
-    } catch { /* Fallback */ }
-  }
-  ladeLokal();
-}
-
-// ════════════════════════════════════════════════════════
-//  EINHEITEN (erweitert)
-// ════════════════════════════════════════════════════════
-const EINHEITEN = [
-  { gruppe: 'Volumen', werte: [
-    'ml', 'cl', 'dl', 'l',
-    'TL', 'EL',
-    'Tasse', 'Tassen',
-    'Schuss', 'Spritzer',
-  ]},
-  { gruppe: 'Gewicht', werte: [
-    'mg', 'g', 'kg',
-    'Unze (oz)',
-  ]},
-  { gruppe: 'Stück & Portionen', werte: [
-    'Stk.', 'Stück',
-    'Bund', 'Bündel',
-    'Scheibe', 'Scheiben',
-    'Zehe', 'Zehen',
-    'Blatt', 'Blätter',
-    'Pck.', 'Packung',
-    'Dose', 'Dosen',
-    'Glas', 'Gläser',
-    'Becher',
-    'Flasche', 'Flaschen',
-    'Rolle',
-    'Zweig', 'Zweige',
-  ]},
-  { gruppe: 'Gewürze & Kleinstmengen', werte: [
-    'Prise', 'Prisen',
-    'Msp.',
-    'Tropfen',
-    'etwas',
-    'wenig',
-    'reichlich',
-    'nach Geschmack',
-  ]},
-  { gruppe: 'Backen', werte: [
-    'Würfel',
-    'Tüte',
-    'Beutel',
-    'Riegel',
-    'Block',
-  ]},
-  { gruppe: 'Sonstiges', werte: [
-    '–',
-    'nach Bedarf',
-    'beliebig',
-  ]},
+// ─── Einheiten ────────────────────────────────────────────
+const EINH = [
+  ['Volumen', ['ml','cl','dl','l','TL','EL','Tasse','Tassen','Schuss','Spritzer']],
+  ['Gewicht', ['mg','g','kg','Unze (oz)']],
+  ['Stück',   ['Stk.','Stück','Bund','Scheibe','Scheiben','Zehe','Zehen','Blatt','Blätter','Pck.','Packung','Dose','Glas','Becher','Flasche','Zweig']],
+  ['Gewürze', ['Prise','Prisen','Msp.','Tropfen','etwas','wenig','nach Geschmack']],
+  ['Backen',  ['Würfel','Tüte','Beutel','Riegel','Block']],
+  ['–',       ['–','nach Bedarf','beliebig']],
 ];
-
-function buildEinheitOptions(sel = '') {
-  let h = '<option value="">(Einheit)</option>';
-  EINHEITEN.forEach(g => {
-    h += `<optgroup label="${g.gruppe}">`;
-    g.werte.forEach(w => h += `<option${w === sel ? ' selected' : ''}>${w}</option>`);
-    h += '</optgroup>';
-  });
-  return h;
+function einhOpts(sel='') {
+  return '<option value="">(Einheit)</option>' +
+    EINH.map(([g,ws])=>`<optgroup label="${g}">${ws.map(w=>`<option${w===sel?' selected':''}>${w}</option>`).join('')}</optgroup>`).join('');
 }
 
-// ════════════════════════════════════════════════════════
-//  THEME
-// ════════════════════════════════════════════════════════
+// ─── Theme ────────────────────────────────────────────────
 (function(){
-  const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
-  let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
-  r.setAttribute('data-theme',d);
-  function icon(){ t&&(t.innerHTML=d==='dark'?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>':'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'); }
-  icon();
-  t&&t.addEventListener('click',()=>{ d=d==='dark'?'light':'dark'; r.setAttribute('data-theme',d); icon(); });
+  const btn = document.getElementById('themeBtn');
+  const html = document.documentElement;
+  const pref = matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+  let theme = pref;
+  html.setAttribute('data-theme', theme);
+  function setIcon() {
+    btn.innerHTML = theme === 'dark'
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  }
+  setIcon();
+  btn.addEventListener('click', () => { theme = theme==='dark'?'light':'dark'; html.setAttribute('data-theme',theme); setIcon(); });
 })();
 
-// ════════════════════════════════════════════════════════
-//  TOAST
-// ════════════════════════════════════════════════════════
-function toast(msg, type='success'){
-  const w=document.getElementById('toastWrap'), el=document.createElement('div');
-  el.className=`toast ${type}`; el.textContent=msg; w.appendChild(el);
-  setTimeout(()=>el.remove(), 3200);
+// ─── Toast ────────────────────────────────────────────────
+function toast(msg, type='ok') {
+  const w = document.getElementById('twrap'), el = document.createElement('div');
+  el.className = `toast ${type}`; el.textContent = msg; w.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
 }
 
-// ════════════════════════════════════════════════════════
-//  SKELETON
-// ════════════════════════════════════════════════════════
-function showSkeleton(){
-  const g=document.getElementById('grid');
-  g.innerHTML=Array.from({length:6}).map(()=>`
-    <div class="skel-card">
-      <div class="skeleton skel-img"></div>
-      <div class="skel-body">
-        <div class="skeleton skel-line wide" style="margin-bottom:var(--space-3)"></div>
-        <div class="skeleton skel-line short"></div>
-        <div class="skeleton skel-line med"></div>
+// ─── Skeleton ─────────────────────────────────────────────
+function showSkel() {
+  document.getElementById('grid').innerHTML = Array.from({length:6}).map(()=>`
+    <div class="skc">
+      <div class="sk skimg"></div>
+      <div class="skbody">
+        <div class="sk skl w70" style="margin-bottom:.75rem"></div>
+        <div class="sk skl w40"></div>
+        <div class="sk skl w55"></div>
       </div>
     </div>`).join('');
 }
 
-// ════════════════════════════════════════════════════════
-//  RENDER
-// ════════════════════════════════════════════════════════
-function filterRezepte(){
-  const s=document.getElementById('searchInput').value.toLowerCase();
-  const k=document.getElementById('katFilter').value;
+// ─── Render ───────────────────────────────────────────────
+function filterAll() {
+  const s = document.getElementById('search').value.toLowerCase();
+  const k = document.getElementById('katF').value;
   render(alle.filter(r=>
-    (!s||r.titel.toLowerCase().includes(s)||(r.notizen||'').toLowerCase().includes(s))&&
-    (!k||r.kategorie===k)
+    (!s || r.titel.toLowerCase().includes(s) || (r.notizen||'').toLowerCase().includes(s)) &&
+    (!k || r.kategorie === k)
   ));
 }
-
-function render(rezepte){
-  document.getElementById('rezeptCount').textContent=
-    alle.length?`${alle.length} Rezept${alle.length!==1?'e':''}`:'' ;
-  const g=document.getElementById('grid');
-  if(!rezepte.length){
-    g.innerHTML=`<div class="empty" style="grid-column:1/-1">
+function render(list) {
+  document.getElementById('rcount').textContent = alle.length ? `${alle.length} Rezept${alle.length!==1?'e':''}` : '';
+  const g = document.getElementById('grid');
+  if (!list.length) {
+    g.innerHTML = `<div class="empty" style="grid-column:1/-1">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-      <h3>${alle.length?'Keine Treffer':'Noch keine Rezepte'}</h3>
-      <p>${alle.length?'Passe die Suche an oder wähle eine andere Kategorie.':'Erstelle jetzt dein erstes Rezept.'}</p>
-      ${!alle.length?'<button class="btn btn-primary" onclick="openForm()">Erstes Rezept erstellen</button>':''}
+      <h3>${alle.length ? 'Keine Treffer' : 'Noch keine Rezepte'}</h3>
+      <p>${alle.length ? 'Andere Suche versuchen.' : 'Lege jetzt dein erstes Rezept an.'}</p>
+      ${!alle.length ? '<button class="btn btn-pr" onclick="openForm()">Erstes Rezept</button>' : ''}
     </div>`;
     return;
   }
-  g.innerHTML=rezepte.map(r=>{
-    const imgHtml=r.bild
-      ?`<img class="card-img" src="${r.bild}" alt="${esc(r.titel)}" loading="lazy" width="300" height="160">`
-      :`<div class="card-img-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>`;
-    return `<article class="card" onclick="openDetail(${r.id})" tabindex="0" role="button" aria-label="${esc(r.titel)} öffnen">
-      ${imgHtml}
-      <div class="card-body">
-        <div class="card-header"><h2 class="card-title">${esc(r.titel)}</h2><span class="badge">${esc(r.kategorie)}</span></div>
-        <div class="card-meta">
-          <span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${r.kochzeit} Min.</span>
-          <span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${r.portionen} Port.</span>
-          <span class="meta-item" style="margin-left:auto">${r.zutaten.length} Zutaten</span>
+  g.innerHTML = list.map(r => {
+    const img = r.bild
+      ? `<img class="cimg" src="${r.bild}" alt="${e(r.titel)}" loading="lazy" width="300" height="160">`
+      : `<div class="cph"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>`;
+    return `<article class="card" onclick="openD(${r.id})" tabindex="0">
+      ${img}
+      <div class="cbody">
+        <div class="chdr"><h2 class="ctitle">${e(r.titel)}</h2><span class="badge">${e(r.kategorie)}</span></div>
+        <div class="cmeta">
+          <span class="mi"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${r.kochzeit} Min.</span>
+          <span class="mi"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${r.portionen} Port.</span>
+          <span class="mi" style="margin-left:auto">${r.zutaten.length} Zutaten</span>
         </div>
-        ${r.schritte.length?`<p class="card-preview">${esc(r.schritte[0])}</p>`:''}
-        <div class="card-actions" onclick="event.stopPropagation()">
-          <button class="btn btn-ghost btn-sm" onclick="openEdit(${r.id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>Bearbeiten</button>
-          <button class="btn btn-ghost btn-sm" style="color:var(--color-error)" onclick="deleteRezept(${r.id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>Löschen</button>
+        ${r.schritte.length ? `<p class="cprev">${e(r.schritte[0])}</p>` : ''}
+        <div class="cact" onclick="event.stopPropagation()">
+          <button class="btn btn-gh btn-sm" onclick="openEdit(${r.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>Bearbeiten</button>
+          <button class="btn btn-sm" style="color:var(--err)" onclick="delR(${r.id})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>Löschen</button>
         </div>
       </div>
     </article>`;
   }).join('');
 }
 
-// ════════════════════════════════════════════════════════
-//  DETAIL
-// ════════════════════════════════════════════════════════
-async function openDetail(id){
-  let r=alle.find(x=>x.id===id);
-  if(apiOnline){ try{ r=await apiFetch(`/api/rezepte/${id}`); }catch{} }
-  if(!r) return;
-  document.getElementById('dBadge').textContent=r.kategorie;
-  document.getElementById('dTitel').textContent=r.titel;
-  document.getElementById('dHeroWrap').innerHTML=r.bild
-    ?`<img class="detail-hero" src="${r.bild}" alt="${esc(r.titel)}" loading="lazy">`
-    :`<div class="detail-hero-placeholder"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>`;
-  document.getElementById('dMeta').innerHTML=`<span>⏱ ${r.kochzeit} Min.</span><span>👥 ${r.portionen} Port.</span><span>🥘 ${r.zutaten.length} Zutaten</span><span>📋 ${r.schritte.length} Schritte</span>`;
-  document.getElementById('dZutaten').innerHTML=r.zutaten.map(z=>{
-    const me=[z.menge,z.einheit].filter(Boolean).join(' ');
-    return `<div class="zutat-item"><span class="zutat-menge">${esc(me)}</span><span>${esc(z.name||z)}</span></div>`;
+// ─── Detail ───────────────────────────────────────────────
+async function openD(id) {
+  let r = alle.find(x => x.id === id);
+  if (apiOk) { try { r = await apiFetch(`/api/rezepte/${id}`); } catch {} }
+  if (!r) return;
+  document.getElementById('dbadge').textContent = r.kategorie;
+  document.getElementById('dtitle').textContent = r.titel;
+  document.getElementById('dhero').innerHTML = r.bild
+    ? `<img class="dhero" src="${r.bild}" alt="${e(r.titel)}">`
+    : `<div class="dhero-ph"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>`;
+  document.getElementById('dmeta').innerHTML =
+    `<span>⏱ ${r.kochzeit} Min.</span><span>👥 ${r.portionen} Port.</span><span>🥘 ${r.zutaten.length} Zutaten</span><span>📋 ${r.schritte.length} Schritte</span>`;
+  document.getElementById('dzutaten').innerHTML = r.zutaten.map(z => {
+    const m = [z.menge, z.einheit].filter(Boolean).join(' ');
+    return `<div class="zi"><span class="zmenge">${e(m)}</span><span>${e(z.name||z)}</span></div>`;
   }).join('');
-  document.getElementById('dSchritte').innerHTML=r.schritte.map((s,i)=>`<div class="schritt-item"><div class="schritt-num">${i+1}</div><p>${esc(s)}</p></div>`).join('');
-  const n=r.notizen&&r.notizen.trim();
-  document.getElementById('dNotizenSection').style.display=n?'block':'none';
-  document.getElementById('dNotizen').textContent=n||'';
-  document.getElementById('dEditBtn').onclick=()=>{ closeDetail(); openEdit(id); };
-  document.getElementById('dDelBtn').onclick=()=>deleteRezept(id);
-  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('dschritte').innerHTML = r.schritte.map((s,i) =>
+    `<div class="sti"><div class="snum">${i+1}</div><p>${e(s)}</p></div>`).join('');
+  const n = (r.notizen||'').trim();
+  document.getElementById('dnotsec').style.display = n ? 'block' : 'none';
+  document.getElementById('dnotizen').textContent = n;
+  document.getElementById('dEditBtn').onclick = () => { closeD(); openEdit(id); };
+  document.getElementById('dDelBtn').onclick = () => delR(id);
+  document.getElementById('detailOv').classList.add('open');
 }
-function closeDetail(){ document.getElementById('detailOverlay').classList.remove('open'); }
-function closeDetailOnBg(e){ if(e.target===document.getElementById('detailOverlay')) closeDetail(); }
+function closeD() { document.getElementById('detailOv').classList.remove('open'); }
+function closeDOvBg(ev) { if (ev.target === document.getElementById('detailOv')) closeD(); }
 
-// ════════════════════════════════════════════════════════
-//  PDF EXPORT
-// ════════════════════════════════════════════════════════
-function exportPdf(){
-  document.getElementById('pdfDate').textContent=new Date().toLocaleDateString('de-CH',{day:'2-digit',month:'long',year:'numeric'});
+// ─── PDF ──────────────────────────────────────────────────
+function exportPdf() {
+  document.getElementById('pdfDate').textContent =
+    new Date().toLocaleDateString('de-CH',{day:'2-digit',month:'long',year:'numeric'});
   window.print();
 }
 
-// ════════════════════════════════════════════════════════
-//  BILD – Upload, Drag & Drop, Vorschau
-// ════════════════════════════════════════════════════════
-function initDropZone() {
-  const zone = document.getElementById('imgDropZone');
-  if (!zone) return;
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) handleImageFile(file);
-    else toast('Nur Bilddateien erlaubt.', 'error');
+// ─── Bild ─────────────────────────────────────────────────
+function initDrop() {
+  const z = document.getElementById('dropz');
+  z.addEventListener('dragover', ev => { ev.preventDefault(); z.classList.add('drag'); });
+  z.addEventListener('dragleave', () => z.classList.remove('drag'));
+  z.addEventListener('drop', ev => {
+    ev.preventDefault(); z.classList.remove('drag');
+    const f = ev.dataTransfer.files[0];
+    if (f?.type.startsWith('image/')) handleImg(f);
+    else toast('Nur Bilddateien!', 'err');
   });
 }
-
-function previewBild(input) {
-  const file = input.files[0];
-  if (file) handleImageFile(file);
+function prevBild(inp) { if (inp.files[0]) handleImg(inp.files[0]); }
+function handleImg(f) {
+  if (f.size > 8*1024*1024) { toast('Bild max. 8 MB', 'err'); return; }
+  const rd = new FileReader();
+  rd.onload = ev => { bildB64 = ev.target.result; showPrev(bildB64); };
+  rd.readAsDataURL(f);
 }
-
-function handleImageFile(file) {
-  if (file.size > 8 * 1024 * 1024) { toast('Bild max. 8 MB', 'error'); return; }
-  const reader = new FileReader();
-  reader.onload = e => { bildBase64 = e.target.result; showImgPreview(bildBase64); };
-  reader.readAsDataURL(file);
-}
-
-function showImgPreview(src) {
-  const zone = document.getElementById('imgDropZone');
-  const wrap = document.getElementById('imgPreviewWrap');
-  zone.style.display = 'none';
-  wrap.style.display = 'block';
-  wrap.className = 'img-preview-wrap';
-  wrap.innerHTML = `
-    <img class="img-preview" src="${src}" alt="Vorschau">
-    <button type="button" class="img-remove" onclick="clearBild()" aria-label="Bild entfernen">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+function showPrev(src) {
+  document.getElementById('dropz').style.display = 'none';
+  const w = document.getElementById('prevwrap');
+  w.style.display = 'block'; w.className = 'prevwrap';
+  w.innerHTML = `
+    <img class="previmg" src="${src}" alt="Vorschau">
+    <button type="button" class="prevdel" onclick="clearImg()" aria-label="Entfernen">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
-    <label class="img-change-btn" aria-label="Bild ersetzen">
-      📷 Bild ändern
-      <input type="file" class="img-change-input" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onchange="previewBild(this)">
-    </label>`;
+    <label class="prevchg">📷 Ändern<input type="file" accept="image/*" onchange="prevBild(this)"></label>`;
 }
-
-function clearBild() {
-  bildBase64 = null;
+function clearImg() {
+  bildB64 = null;
   document.getElementById('fBild').value = '';
-  const zone = document.getElementById('imgDropZone');
-  const wrap = document.getElementById('imgPreviewWrap');
-  zone.style.display = '';
-  wrap.style.display = 'none';
-  wrap.innerHTML = '';
+  document.getElementById('dropz').style.display = '';
+  const w = document.getElementById('prevwrap');
+  w.style.display = 'none'; w.innerHTML = '';
 }
 
-// ════════════════════════════════════════════════════════
-//  FORMULAR
-// ════════════════════════════════════════════════════════
-function openForm(data = null) {
-  bildBase64 = data ? (data.bild || null) : null;
+// ─── Formular ─────────────────────────────────────────────
+function openForm(data=null) {
+  bildB64 = data ? (data.bild||null) : null;
   document.getElementById('editId').value = data ? data.id : '';
-  document.getElementById('modalTitle').textContent = data ? 'Rezept bearbeiten' : 'Neues Rezept';
-  document.getElementById('fTitel').value = data ? data.titel : '';
-  document.getElementById('fKat').value = data ? data.kategorie : 'Abendessen';
-  document.getElementById('fPortionen').value = data ? data.portionen : 2;
-  document.getElementById('fZeit').value = data ? data.kochzeit : 30;
-  document.getElementById('fNotizen').value = data ? (data.notizen || '') : '';
+  document.getElementById('mtitle').textContent = data ? 'Rezept bearbeiten' : 'Neues Rezept';
+  document.getElementById('fT').value = data ? data.titel : '';
+  document.getElementById('fK').value = data ? data.kategorie : 'Abendessen';
+  document.getElementById('fP').value = data ? data.portionen : 2;
+  document.getElementById('fZ').value = data ? data.kochzeit : 30;
+  document.getElementById('fN').value = data ? (data.notizen||'') : '';
   document.getElementById('fBild').value = '';
-  if (bildBase64) showImgPreview(bildBase64); else clearBild();
-  const zl = document.getElementById('zutatenList'); zl.innerHTML = '';
-  (data ? data.zutaten : [{menge:'',einheit:'',name:''}]).forEach(z => addZutat(z));
-  const sl = document.getElementById('schritteList'); sl.innerHTML = '';
-  (data ? data.schritte : ['']).forEach(s => addSchritt(s));
-  document.getElementById('formOverlay').classList.add('open');
-  initDropZone();
-  setTimeout(() => document.getElementById('fTitel').focus(), 60);
+  if (bildB64) showPrev(bildB64); else clearImg();
+  const zl = document.getElementById('zlist'); zl.innerHTML = '';
+  (data ? data.zutaten : [{menge:'',einheit:'',name:''}]).forEach(z => addZ(z));
+  const sl = document.getElementById('slist'); sl.innerHTML = '';
+  (data ? data.schritte : ['']).forEach(s => addS(s));
+  document.getElementById('formOv').classList.add('open');
+  initDrop();
+  setTimeout(() => document.getElementById('fT').focus(), 60);
 }
 async function openEdit(id) {
   let r = alle.find(x => x.id === id);
-  if (apiOnline) { try { r = await apiFetch(`/api/rezepte/${id}`); } catch {} }
+  if (apiOk) { try { r = await apiFetch(`/api/rezepte/${id}`); } catch {} }
   if (r) openForm(r);
 }
-function closeForm() { document.getElementById('formOverlay').classList.remove('open'); bildBase64 = null; }
-function closeFormOnBg(e) { if (e.target === document.getElementById('formOverlay')) closeForm(); }
+function closeF() { document.getElementById('formOv').classList.remove('open'); bildB64 = null; }
+function closeFBg(ev) { if (ev.target === document.getElementById('formOv')) closeF(); }
 
-function addZutat(z = {}) {
-  const row = document.createElement('div'); row.className = 'zutat-row';
-  row.innerHTML = `<input type="text" placeholder="200" value="${esc(z.menge||'')}" aria-label="Menge"><select class="einheit-sel" aria-label="Einheit">${buildEinheitOptions(z.einheit||'')}</select><input type="text" placeholder="z.B. Mehl" value="${esc(z.name||'')}" aria-label="Zutat"><button type="button" class="del-btn" onclick="this.closest('.zutat-row').remove()" aria-label="Entfernen"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`;
-  document.getElementById('zutatenList').appendChild(row);
+function addZ(z={}) {
+  const row = document.createElement('div'); row.className = 'zrow';
+  row.innerHTML = `<input type="text" placeholder="200" value="${e(z.menge||'')}" aria-label="Menge"><select class="einsel" aria-label="Einheit">${einhOpts(z.einheit||'')}</select><input type="text" placeholder="z.B. Mehl" value="${e(z.name||'')}" aria-label="Zutat"><button type="button" class="delbtn" onclick="this.closest('.zrow').remove()" aria-label="Entfernen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`;
+  document.getElementById('zlist').appendChild(row);
 }
-function addSchritt(text = '') {
-  const list = document.getElementById('schritteList'), num = list.children.length + 1;
-  const row = document.createElement('div'); row.className = 'schritt-row';
-  row.innerHTML = `<div class="schritt-num">${num}</div><textarea placeholder="Schritt beschreiben…" rows="2">${esc(text)}</textarea><button type="button" class="del-btn" onclick="removeSchritt(this)" aria-label="Entfernen" style="margin-top:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`;
-  list.appendChild(row);
+function addS(text='') {
+  const l = document.getElementById('slist'), n = l.children.length+1;
+  const row = document.createElement('div'); row.className = 'srow';
+  row.innerHTML = `<div class="snum">${n}</div><textarea placeholder="Schritt beschreiben…" rows="2">${e(text)}</textarea><button type="button" class="delbtn" onclick="rmS(this)" aria-label="Entfernen" style="margin-top:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`;
+  l.appendChild(row);
 }
-function removeSchritt(btn) {
-  btn.closest('.schritt-row').remove();
-  document.querySelectorAll('#schritteList .schritt-num').forEach((el, i) => el.textContent = i + 1);
+function rmS(btn) {
+  btn.closest('.srow').remove();
+  document.querySelectorAll('#slist .snum').forEach((el,i) => el.textContent = i+1);
 }
 
-// ════════════════════════════════════════════════════════
-//  SPEICHERN
-// ════════════════════════════════════════════════════════
-async function saveRezept() {
-  const titel = document.getElementById('fTitel').value.trim();
-  if (!titel) { toast('Bitte einen Titel angeben.', 'error'); document.getElementById('fTitel').focus(); return; }
-  const zutaten = [...document.querySelectorAll('#zutatenList .zutat-row')].map(row => {
-    const inp = row.querySelectorAll('input[type=text]'), sel = row.querySelector('select');
-    return { menge: inp[0].value.trim(), einheit: sel ? sel.value : '', name: inp[1].value.trim() };
+// ─── Speichern ────────────────────────────────────────────
+async function saveR() {
+  const titel = document.getElementById('fT').value.trim();
+  if (!titel) { toast('Bitte Titel angeben.','err'); document.getElementById('fT').focus(); return; }
+  const zutaten = [...document.querySelectorAll('#zlist .zrow')].map(row => {
+    const inp = row.querySelectorAll('input[type=text]');
+    const sel = row.querySelector('select');
+    return { menge:inp[0].value.trim(), einheit:sel?sel.value:'', name:inp[1].value.trim() };
   }).filter(z => z.name);
-  const schritte = [...document.querySelectorAll('#schritteList textarea')].map(t => t.value.trim()).filter(Boolean);
+  const schritte = [...document.querySelectorAll('#slist textarea')].map(t=>t.value.trim()).filter(Boolean);
   const id = document.getElementById('editId').value;
-  const payload = { titel, kategorie: document.getElementById('fKat').value, portionen: +document.getElementById('fPortionen').value || 2, kochzeit: +document.getElementById('fZeit').value || 30, notizen: document.getElementById('fNotizen').value.trim(), bild: bildBase64 || null, zutaten, schritte };
-
+  const payload = {
+    titel,
+    kategorie: document.getElementById('fK').value,
+    portionen: +document.getElementById('fP').value || 2,
+    kochzeit:  +document.getElementById('fZ').value || 30,
+    notizen:   document.getElementById('fN').value.trim(),
+    bild: bildB64 || null,
+    zutaten, schritte
+  };
   const btn = document.getElementById('saveBtn');
   btn.disabled = true; btn.textContent = 'Speichere…';
   try {
-    if (apiOnline) {
-      const saved = id ? await apiFetch(`/api/rezepte/${id}`, {method:'PUT',body:JSON.stringify(payload)}) : await apiFetch('/api/rezepte', {method:'POST',body:JSON.stringify(payload)});
-      if (id) { const idx = alle.findIndex(r => r.id === Number(id)); if (idx !== -1) alle[idx] = saved; else alle.unshift(saved); }
+    if (apiOk) {
+      const saved = id
+        ? await apiFetch(`/api/rezepte/${id}`, {method:'PUT', body:JSON.stringify(payload)})
+        : await apiFetch('/api/rezepte', {method:'POST', body:JSON.stringify(payload)});
+      if (id) { const i = alle.findIndex(r=>r.id===Number(id)); i!==-1 ? alle[i]=saved : alle.unshift(saved); }
       else alle.unshift(saved);
     } else {
-      const rezept = { ...payload, id: id ? Number(id) : nextId(), erstellt: id ? (alle.find(r => r.id === Number(id))?.erstellt || new Date().toISOString()) : new Date().toISOString() };
-      if (id) { const idx = alle.findIndex(r => r.id === Number(id)); if (idx !== -1) alle[idx] = rezept; else alle.unshift(rezept); }
-      else alle.unshift(rezept);
-      speichereLokal();
+      const r = {...payload, id:id?Number(id):nextId(), erstellt:new Date().toISOString()};
+      if (id) { const i=alle.findIndex(r=>r.id===Number(id)); i!==-1?alle[i]=r:alle.unshift(r); }
+      else alle.unshift(r);
+      saveLocal();
     }
-    toast(id ? 'Rezept aktualisiert! ✏️' : 'Rezept gespeichert! 🎉');
-    showSaveBadge();
-    closeForm();
-    filterRezepte();
-  } catch(e) {
-    toast('Fehler beim Speichern: ' + e.message, 'error');
+    toast(id ? 'Aktualisiert ✏️' : 'Gespeichert 🎉');
+    closeF();
+    filterAll();
+  } catch(err) {
+    toast('Fehler: '+err.message,'err');
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Speichern';
+    btn.disabled=false;
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Speichern';
   }
 }
-
-async function deleteRezept(id) {
+async function delR(id) {
   if (!confirm('Rezept wirklich löschen?')) return;
-  if (apiOnline) { try { await apiFetch(`/api/rezepte/${id}`, {method:'DELETE'}); } catch(e) { toast('Fehler: ' + e.message, 'error'); return; } }
+  if (apiOk) { try { await apiFetch(`/api/rezepte/${id}`,{method:'DELETE'}); } catch(err) { toast('Fehler: '+err.message,'err'); return; } }
   alle = alle.filter(r => r.id !== id);
-  if (!apiOnline) speichereLokal();
-  toast('Rezept gelöscht.');
-  closeDetail();
-  filterRezepte();
+  if (!apiOk) saveLocal();
+  toast('Gelöscht.'); closeD(); filterAll();
 }
 
-// ════════════════════════════════════════════════════════
-//  UTILS
-// ════════════════════════════════════════════════════════
-function esc(s) { const d = document.createElement('div'); d.textContent = String(s || ''); return d.innerHTML; }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeForm(); closeDetail(); } });
+// ─── Utils ────────────────────────────────────────────────
+function e(s) { const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+document.addEventListener('keydown', ev => { if(ev.key==='Escape'){closeF();closeD();} });
 
-// ════════════════════════════════════════════════════════
-//  START
-// ════════════════════════════════════════════════════════
+// ─── Start ────────────────────────────────────────────────
 (async () => {
-  showSkeleton();
+  showSkel();
   await checkApi();
-  await ladeDaten();
-  filterRezepte();
+  await loadData();
+  filterAll();
 })();
 </script>
 </body>

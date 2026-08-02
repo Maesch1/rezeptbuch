@@ -10,10 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const DB_PATH = process.env.DB_PATH || '/data/rezeptbuch.db';
 
-// Sicherstellen, dass /data existiert
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
-// ─── Datenbank ───────────────────────────────────────────────
+// ─── Datenbank ────────────────────────────────────────────
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
@@ -29,7 +28,6 @@ db.exec(`
     bild       TEXT    DEFAULT NULL,
     erstellt   TEXT    NOT NULL DEFAULT (datetime('now'))
   );
-
   CREATE TABLE IF NOT EXISTS zutaten (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     rezept_id  INTEGER NOT NULL REFERENCES rezepte(id) ON DELETE CASCADE,
@@ -38,7 +36,6 @@ db.exec(`
     name       TEXT    NOT NULL,
     sort       INTEGER DEFAULT 0
   );
-
   CREATE TABLE IF NOT EXISTS schritte (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     rezept_id  INTEGER NOT NULL REFERENCES rezepte(id) ON DELETE CASCADE,
@@ -47,8 +44,8 @@ db.exec(`
   );
 `);
 
-// ─── Middleware ───────────────────────────────────────────────
-app.use(express.json({ limit: '10mb' }));
+// ─── Middleware ───────────────────────────────────────────
+app.use(express.json({ limit: '15mb' }));
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
@@ -57,7 +54,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ─── Helper ───────────────────────────────────────────────────
+// ─── Helper ───────────────────────────────────────────────
 function getRezept(id) {
   const r = db.prepare('SELECT * FROM rezepte WHERE id = ?').get(id);
   if (!r) return null;
@@ -66,9 +63,9 @@ function getRezept(id) {
   return r;
 }
 
-// ─── Routes ───────────────────────────────────────────────────
+// ─── Routes ───────────────────────────────────────────────
+app.get('/health', (_req, res) => res.json({ status: 'ok', db: DB_PATH }));
 
-// GET /api/rezepte          – alle Rezepte (ohne Bilder, für Liste)
 app.get('/api/rezepte', (req, res) => {
   const { suche, kategorie } = req.query;
   let sql = 'SELECT id,titel,kategorie,portionen,kochzeit,notizen,erstellt FROM rezepte WHERE 1=1';
@@ -84,46 +81,37 @@ app.get('/api/rezepte', (req, res) => {
   res.json(rows);
 });
 
-// GET /api/rezepte/:id      – einzelnes Rezept (mit Bild)
 app.get('/api/rezepte/:id', (req, res) => {
   const r = getRezept(Number(req.params.id));
   if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
   res.json(r);
 });
 
-// POST /api/rezepte         – neu erstellen
 app.post('/api/rezepte', (req, res) => {
-  const { titel, kategorie = 'Sonstiges', portionen = 2, kochzeit = 30,
-          notizen = '', bild = null, zutaten = [], schritte = [] } = req.body;
-  if (!titel || !titel.trim()) return res.status(400).json({ error: 'Titel fehlt' });
-
+  const { titel, kategorie='Sonstiges', portionen=2, kochzeit=30,
+          notizen='', bild=null, zutaten=[], schritte=[] } = req.body;
+  if (!titel?.trim()) return res.status(400).json({ error: 'Titel fehlt' });
   const info = db.prepare(
     'INSERT INTO rezepte (titel,kategorie,portionen,kochzeit,notizen,bild) VALUES (?,?,?,?,?,?)'
   ).run(titel.trim(), kategorie, portionen, kochzeit, notizen, bild);
   const id = info.lastInsertRowid;
-
   const insZ = db.prepare('INSERT INTO zutaten (rezept_id,menge,einheit,name,sort) VALUES (?,?,?,?,?)');
   const insS = db.prepare('INSERT INTO schritte (rezept_id,text,sort) VALUES (?,?,?)');
   db.transaction(() => {
     zutaten.forEach((z, i) => insZ.run(id, z.menge||'', z.einheit||'', z.name||'', i));
     schritte.forEach((s, i) => insS.run(id, s, i));
   })();
-
   res.status(201).json(getRezept(id));
 });
 
-// PUT /api/rezepte/:id      – aktualisieren
 app.put('/api/rezepte/:id', (req, res) => {
   const id = Number(req.params.id);
   if (!getRezept(id)) return res.status(404).json({ error: 'Nicht gefunden' });
-
-  const { titel, kategorie, portionen, kochzeit, notizen, bild, zutaten = [], schritte = [] } = req.body;
-  if (!titel || !titel.trim()) return res.status(400).json({ error: 'Titel fehlt' });
-
+  const { titel, kategorie, portionen, kochzeit, notizen, bild, zutaten=[], schritte=[] } = req.body;
+  if (!titel?.trim()) return res.status(400).json({ error: 'Titel fehlt' });
   db.prepare(
     'UPDATE rezepte SET titel=?,kategorie=?,portionen=?,kochzeit=?,notizen=?,bild=? WHERE id=?'
-  ).run(titel.trim(), kategorie, portionen, kochzeit, notizen, bild ?? null, id);
-
+  ).run(titel.trim(), kategorie, portionen, kochzeit, notizen, bild??null, id);
   const insZ = db.prepare('INSERT INTO zutaten (rezept_id,menge,einheit,name,sort) VALUES (?,?,?,?,?)');
   const insS = db.prepare('INSERT INTO schritte (rezept_id,text,sort) VALUES (?,?,?)');
   db.transaction(() => {
@@ -132,20 +120,14 @@ app.put('/api/rezepte/:id', (req, res) => {
     zutaten.forEach((z, i) => insZ.run(id, z.menge||'', z.einheit||'', z.name||'', i));
     schritte.forEach((s, i) => insS.run(id, s, i));
   })();
-
   res.json(getRezept(id));
 });
 
-// DELETE /api/rezepte/:id   – löschen
 app.delete('/api/rezepte/:id', (req, res) => {
   const id = Number(req.params.id);
-  const r = getRezept(id);
-  if (!r) return res.status(404).json({ error: 'Nicht gefunden' });
+  if (!getRezept(id)) return res.status(404).json({ error: 'Nicht gefunden' });
   db.prepare('DELETE FROM rezepte WHERE id = ?').run(id);
   res.json({ ok: true, id });
 });
 
-// Health
-app.get('/health', (_req, res) => res.json({ status: 'ok', db: DB_PATH }));
-
-app.listen(PORT, () => console.log(`✅  Rezeptbuch-API läuft auf Port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`✅  Rezeptbuch-API läuft auf Port ${PORT}`));
