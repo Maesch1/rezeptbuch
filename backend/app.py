@@ -1,11 +1,11 @@
 import os
 import sqlite3
 import json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='')
 CORS(app)
 
 DB_PATH = os.environ.get('DB_PATH', '/data/rezepte.db')
@@ -43,6 +43,18 @@ def row_to_dict(row):
     d['zutaten'] = json.loads(d['zutaten'])
     d['schritte'] = json.loads(d['schritte'])
     return d
+
+
+# --- Frontend ---
+@app.route('/')
+def index():
+    return send_from_directory('static', 'index.html')
+
+
+# --- API ---
+@app.route('/api/health')
+def health():
+    return jsonify({'status': 'ok'})
 
 
 @app.route('/api/rezepte', methods=['GET'])
@@ -133,11 +145,6 @@ def delete_rezept(rid):
     return '', 204
 
 
-@app.route('/api/health', methods=['GET'])
-def health():
-    return jsonify({'status': 'ok'})
-
-
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=False)

@@ -1,77 +1,69 @@
 # 🍳 Rezeptbuch
 
-Ein dockerisiertes Rezeptbuch mit persistentem Backend.
-
-## Architektur
-
-```
-┌─────────────────────────────────┐
-│         Docker Compose          │
-│                                 │
-│  ┌──────────┐  ┌─────────────┐  │
-│  │  nginx   │  │  Flask API  │  │
-│  │:8080→:80 │→ │   :5000     │  │
-│  └──────────┘  └──────┬──────┘  │
-│                        │        │
-│                 ┌──────▼──────┐ │
-│                 │  SQLite DB  │ │
-│                 │  (Volume)   │ │
-│                 └─────────────┘ │
-└─────────────────────────────────┘
-```
-
-- **Frontend**: nginx serviert die statische HTML-App
-- **Backend**: Python Flask REST-API (`/api/rezepte`)
-- **Datenbank**: SQLite gespeichert in Docker Volume `rezepte-daten`
-- **Daten bleiben erhalten** — auch nach `docker compose down`
+Ein dockerisiertes Rezeptbuch — **ein einzelner Container**, Flask serviert Frontend + API, SQLite speichert die Daten persistent in einem Docker Volume.
 
 ## Schnellstart
 
 ```bash
 git clone https://github.com/Maesch1/rezeptbuch.git
 cd rezeptbuch
+```
+
+### Option A — Docker Compose (empfohlen)
+```bash
 docker compose up -d --build
+```
+
+### Option B — Einzelner docker run Befehl
+```bash
+docker build -t rezeptbuch .
+docker run -d -p 8080:5000 -v rezepte-daten:/data --name rezeptbuch rezeptbuch
 ```
 
 Dann im Browser: **http://localhost:8080**
 
 ## Befehle
 
-| Aktion | Befehl |
-|--------|--------|
-| Starten | `docker compose up -d --build` |
-| Stoppen | `docker compose down` |
-| Logs anzeigen | `docker compose logs -f` |
-| Status prüfen | `docker compose ps` |
-| Daten sichern | `docker run --rm -v rezeptbuch_rezepte-daten:/data -v $(pwd):/backup alpine tar czf /backup/rezepte-backup.tar.gz /data` |
-| Daten wiederherstellen | `docker run --rm -v rezeptbuch_rezepte-daten:/data -v $(pwd):/backup alpine tar xzf /backup/rezepte-backup.tar.gz -C /` |
+| Aktion | Compose | Docker |
+|--------|---------|--------|
+| Starten | `docker compose up -d --build` | `docker run -d -p 8080:5000 -v rezepte-daten:/data --name rezeptbuch rezeptbuch` |
+| Stoppen | `docker compose down` | `docker stop rezeptbuch` |
+| Logs | `docker compose logs -f` | `docker logs -f rezeptbuch` |
+| Status | `docker compose ps` | `docker ps` |
+| Neu bauen | `docker compose up -d --build` | `docker build -t rezeptbuch . && docker rm -f rezeptbuch && docker run ...` |
 
-## API Endpunkte
-
-| Method | URL | Beschreibung |
-|--------|-----|--------------|
-| GET | `/api/rezepte` | Alle Rezepte laden |
-| GET | `/api/rezepte?suche=pasta` | Rezepte suchen |
-| GET | `/api/rezepte?kategorie=Dessert` | Nach Kategorie filtern |
-| POST | `/api/rezepte` | Neues Rezept erstellen |
-| PUT | `/api/rezepte/{id}` | Rezept bearbeiten |
-| DELETE | `/api/rezepte/{id}` | Rezept löschen |
-| GET | `/api/health` | API Status prüfen |
-
-## Backup & Migration
-
-Da die Daten in einem Docker Volume (`rezepte-daten`) gespeichert sind, kannst du sie einfach sichern und auf ein anderes Gerät übertragen:
+## Daten sichern & migrieren
 
 ```bash
 # Backup erstellen
 docker run --rm \
-  -v rezeptbuch_rezepte-daten:/data \
+  -v rezepte-daten:/data \
   -v $(pwd):/backup \
   alpine tar czf /backup/rezepte-backup.tar.gz /data
 
 # Auf neuem Gerät wiederherstellen
 docker run --rm \
-  -v rezeptbuch_rezepte-daten:/data \
+  -v rezepte-daten:/data \
   -v $(pwd):/backup \
   alpine tar xzf /backup/rezepte-backup.tar.gz -C /
 ```
+
+## Architektur
+
+```
+[ Browser :8080 ] → [ Flask Container ] → [ SQLite /data/rezepte.db ]
+                        ↓                         ↑
+                   /          → index.html    Docker Volume
+                   /api/rezepte → REST-API     (rezepte-daten)
+```
+
+## API Endpunkte
+
+| Method | URL | Beschreibung |
+|--------|-----|--------------|
+| GET | `/api/health` | Status prüfen |
+| GET | `/api/rezepte` | Alle Rezepte |
+| GET | `/api/rezepte?suche=pasta` | Suche |
+| POST | `/api/rezepte` | Neues Rezept |
+| PUT | `/api/rezepte/{id}` | Bearbeiten |
+| DELETE | `/api/rezepte/{id}` | Löschen |

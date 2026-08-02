@@ -1,29 +1,14 @@
 version: '3.8'
 
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: rezeptbuch-api
-    restart: unless-stopped
-    volumes:
-      - rezepte-daten:/data
-    environment:
-      - DB_PATH=/data/rezepte.db
-    expose:
-      - "5000"
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: rezeptbuch-frontend
+  rezeptbuch:
+    build: .
+    container_name: rezeptbuch
     restart: unless-stopped
     ports:
-      - "8080:80"
-    depends_on:
-      - backend
+      - "8080:5000"
+    volumes:
+      - rezepte-daten:/data
 
 volumes:
   rezepte-daten:
