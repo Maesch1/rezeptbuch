@@ -1,15 +1,7 @@
-version: '3.8'
-
 services:
   rezeptbuch:
     build: .
     container_name: rezeptbuch
-    restart: unless-stopped
     ports:
-      - "8080:5000"
-    volumes:
-      - rezepte-daten:/data
-
-volumes:
-  rezepte-daten:
-    driver: local
+      - "8080:80"
+    restart: unless-stopped
