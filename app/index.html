@@ -71,6 +71,8 @@
     .btn-sm{padding:var(--space-1) var(--space-3);font-size:var(--text-xs)}
     .btn-danger{background:oklch(from var(--color-error) l c h /.12);color:var(--color-error)}
     .btn-danger:hover{background:oklch(from var(--color-error) l c h /.2)}
+    .btn-import{background:oklch(from var(--color-warning) l c h /.1);color:var(--color-warning);border:1px solid oklch(from var(--color-warning) l c h /.25)}
+    .btn-import:hover{background:oklch(from var(--color-warning) l c h /.2)}
     main{padding:var(--space-8) var(--space-6);max-width:1200px;margin-inline:auto;width:100%}
 
     /* Toolbar */
@@ -153,6 +155,33 @@
     .schritt-num{flex:0 0 28px;height:28px;border-radius:var(--radius-full);background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);font-weight:700;margin-top:6px}
     .schritt-row textarea{flex:1}
 
+    /* ═══ IMPORT MODAL ═══ */
+    .import-modal{max-width:600px}
+    .import-drop{
+      border:2px dashed var(--color-border);border-radius:var(--radius-lg);
+      padding:var(--space-10) var(--space-6);text-align:center;
+      color:var(--color-text-muted);transition:border-color var(--transition),background var(--transition);
+      cursor:pointer;
+    }
+    .import-drop.dragover{border-color:var(--color-primary);background:var(--color-primary-highlight)}
+    .import-drop svg{margin:0 auto var(--space-3);color:var(--color-text-faint)}
+    .import-drop p{font-size:var(--text-sm);max-width:none}
+    .import-drop strong{color:var(--color-primary)}
+    .import-tabs{display:flex;gap:2px;background:var(--color-surface-offset);padding:3px;border-radius:var(--radius-md);margin-bottom:var(--space-5)}
+    .import-tab{flex:1;padding:var(--space-2) var(--space-3);border-radius:calc(var(--radius-md) - 2px);font-size:var(--text-sm);font-weight:500;color:var(--color-text-muted);transition:background var(--transition),color var(--transition);text-align:center}
+    .import-tab.active{background:var(--color-surface);color:var(--color-text);box-shadow:var(--shadow-sm)}
+    .import-panel{display:none}
+    .import-panel.active{display:flex;flex-direction:column;gap:var(--space-4)}
+    .import-status{padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);font-size:var(--text-sm);background:var(--color-primary-highlight);color:var(--color-primary);display:none}
+    .import-status.show{display:block}
+    .import-status.error{background:oklch(from var(--color-error) l c h/.1);color:var(--color-error)}
+    .parse-preview{background:var(--color-surface-offset);border-radius:var(--radius-md);padding:var(--space-4);font-size:var(--text-sm);display:none}
+    .parse-preview.show{display:block}
+    .parse-preview h4{font-family:var(--font-display);font-weight:700;margin-bottom:var(--space-2)}
+    .parse-preview ul{list-style:disc;padding-left:var(--space-4);color:var(--color-text-muted)}
+    .spinner{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:var(--space-1)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
     /* Detail-Overlay */
     .detail-overlay{position:fixed;inset:0;background:oklch(.1 0 0/.5);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:var(--space-6) var(--space-4);backdrop-filter:blur(4px);overflow-y:auto;opacity:0;pointer-events:none;transition:opacity var(--transition)}
     .detail-overlay.open{opacity:1;pointer-events:all}
@@ -186,145 +215,159 @@
        PDF PRINT STYLES
        ════════════════════════════════ */
     @media print {
-      /* alles ausblenden */
       body > .app,
       .toast-wrap,
       .overlay,
       .detail-overlay { display: none !important; }
-
-      /* nur pdf-frame zeigen */
       #pdfFrame { display: block !important; }
 
       @page {
         size: A4;
-        margin: 18mm 18mm 22mm 18mm;
+        margin: 14mm 18mm 18mm 18mm;
       }
 
       #pdfFrame {
         font-family: Georgia, 'Times New Roman', serif;
-        font-size: 11pt;
+        font-size: 10.5pt;
         color: #1a1a18;
-        line-height: 1.55;
+        line-height: 1.5;
         max-width: 100%;
       }
 
+      /* ── Header ── */
       .pdf-header {
-        border-bottom: 2px solid #01696f;
-        padding-bottom: 8pt;
-        margin-bottom: 14pt;
+        border-bottom: 2pt solid #01696f;
+        padding-bottom: 6pt;
+        margin-bottom: 8pt;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
       }
       .pdf-rezeptname {
-        font-size: 22pt;
+        font-size: 20pt;
         font-weight: 700;
         font-family: 'Cabinet Grotesk', Georgia, serif;
         color: #01696f;
         letter-spacing: -.02em;
-        margin: 0 0 4pt;
+        margin: 0;
+        line-height: 1.1;
       }
       .pdf-kategorie {
-        font-size: 9pt;
+        font-size: 8.5pt;
         text-transform: uppercase;
         letter-spacing: .08em;
         color: #7a7974;
         margin: 0;
+        white-space: nowrap;
+        padding-bottom: 2pt;
       }
 
+      /* ── Meta ── */
       .pdf-meta-row {
         display: flex;
-        gap: 24pt;
-        margin: 10pt 0 18pt;
-        font-size: 9.5pt;
+        gap: 20pt;
+        margin: 6pt 0 10pt;
+        font-size: 9pt;
         color: #7a7974;
         flex-wrap: wrap;
+        border-bottom: 1pt solid #e8e5e0;
+        padding-bottom: 8pt;
       }
       .pdf-meta-item strong {
         color: #28251d;
         font-weight: 600;
       }
 
+      /* ── Bild: kompakter, kein Leerraum ── */
       .pdf-hero {
         width: 100%;
-        max-height: 180pt;
+        height: 120pt;          /* war 180pt → deutlich kleiner */
+        max-height: 120pt;
         object-fit: cover;
-        border-radius: 6pt;
-        margin-bottom: 16pt;
+        object-position: center 30%;
+        border-radius: 4pt;
+        margin-bottom: 10pt;
         display: block;
+        page-break-inside: avoid;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
       }
 
+      /* ── Spalten ── */
       .pdf-cols {
         display: grid;
-        grid-template-columns: 220pt 1fr;
-        gap: 20pt;
-        margin-bottom: 16pt;
+        grid-template-columns: 210pt 1fr;
+        gap: 18pt;
+        margin-bottom: 10pt;
+        page-break-inside: avoid;
       }
 
       .pdf-section-title {
         font-family: 'Cabinet Grotesk', Georgia, serif;
-        font-size: 11pt;
+        font-size: 10pt;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .06em;
         color: #01696f;
-        margin: 0 0 6pt;
-        padding-bottom: 3pt;
-        border-bottom: 1px solid #d4d1ca;
+        margin: 0 0 5pt;
+        padding-bottom: 2.5pt;
+        border-bottom: 1pt solid #d4d1ca;
       }
 
       /* Zutaten-Tabelle */
       .pdf-zutaten-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 10pt;
+        font-size: 9.5pt;
       }
       .pdf-zutaten-table tr {
-        border-bottom: 1px solid #e8e5e0;
+        border-bottom: 1pt solid #edeae5;
       }
       .pdf-zutaten-table td {
-        padding: 3.5pt 0;
+        padding: 3pt 0;
         vertical-align: top;
+        line-height: 1.35;
       }
       .pdf-zutaten-table td:first-child {
         color: #7a7974;
         white-space: nowrap;
-        padding-right: 10pt;
-        width: 100pt;
+        padding-right: 8pt;
+        width: 90pt;
       }
 
       /* Zubereitungsschritte */
       .pdf-schritt {
         display: flex;
-        gap: 8pt;
-        margin-bottom: 8pt;
-        font-size: 10.5pt;
+        gap: 7pt;
+        margin-bottom: 7pt;
+        font-size: 10pt;
         page-break-inside: avoid;
+        line-height: 1.4;
       }
       .pdf-schritt-num {
-        flex: 0 0 18pt;
-        height: 18pt;
+        flex: 0 0 16pt;
+        height: 16pt;
         border-radius: 50%;
         background: #01696f;
         color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 8pt;
+        font-size: 7.5pt;
         font-weight: 700;
-        margin-top: 1.5pt;
+        margin-top: 1pt;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
       }
-      .pdf-schritt p {
-        margin: 0;
-        line-height: 1.5;
-      }
+      .pdf-schritt p { margin: 0; }
 
       /* Notizen */
       .pdf-notizen {
         background: #f3f0ec;
         border-left: 3pt solid #01696f;
-        padding: 8pt 12pt;
-        border-radius: 0 4pt 4pt 0;
-        font-size: 10pt;
+        padding: 6pt 10pt;
+        border-radius: 0 3pt 3pt 0;
+        font-size: 9.5pt;
         color: #7a7974;
         margin-top: 4pt;
         print-color-adjust: exact;
@@ -332,17 +375,15 @@
       }
 
       .pdf-footer {
-        margin-top: 20pt;
-        padding-top: 8pt;
-        border-top: 1px solid #d4d1ca;
-        font-size: 8.5pt;
+        margin-top: 14pt;
+        padding-top: 6pt;
+        border-top: 1pt solid #d4d1ca;
+        font-size: 8pt;
         color: #bab9b4;
         display: flex;
         justify-content: space-between;
       }
     }
-
-    /* pdf-frame immer versteckt (nur beim Drucken sichtbar) */
     #pdfFrame { display: none; }
 
     @media(max-width:600px){
@@ -377,6 +418,10 @@
       Gespeichert
     </span>
     <div class="header-right">
+      <button class="btn btn-import" onclick="openImport()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importieren
+      </button>
       <button class="btn btn-primary" onclick="openForm()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         Neues Rezept
@@ -403,8 +448,78 @@
   </main>
 </div>
 
-<!-- ═══ PDF FRAME (nur beim Drucken sichtbar) ═══ -->
+<!-- ═══ PDF FRAME ═══ -->
 <div id="pdfFrame"></div>
+
+<!-- ═══ IMPORT MODAL ═══ -->
+<div class="overlay" id="importOverlay" onclick="closeImportOnBg(event)">
+  <div class="modal import-modal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="modal-header">
+      <span class="modal-title" id="importTitle">Rezept importieren</span>
+      <button class="btn btn-ghost" onclick="closeImport()" aria-label="Schliessen">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <div class="import-tabs">
+        <button class="import-tab active" onclick="switchTab('text')" id="tabText">📝 Text einfügen</button>
+        <button class="import-tab" onclick="switchTab('file')" id="tabFile">📄 Datei / Foto</button>
+      </div>
+
+      <!-- TAB: Text -->
+      <div class="import-panel active" id="panelText">
+        <div class="form-group">
+          <label for="importText">Rezepttext einfügen</label>
+          <textarea id="importText" rows="10"
+            placeholder="Füge hier ein Rezept ein – z.B. aus einer Website kopiert oder abgetippt.
+
+Beispiel:
+Spaghetti Carbonara
+
+Zutaten:
+200g Spaghetti
+2 Eier
+100g Speck
+50g Parmesan
+
+Zubereitung:
+1. Pasta kochen
+2. Speck anbraten
+3. Eier mit Parmesan mischen…"></textarea>
+        </div>
+        <div class="import-status" id="textStatus"></div>
+        <div class="parse-preview" id="textPreview"></div>
+      </div>
+
+      <!-- TAB: Datei -->
+      <div class="import-panel" id="panelFile">
+        <div class="import-drop" id="importDrop"
+          onclick="document.getElementById('importFile').click()"
+          ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p><strong>Klicke hier</strong> oder ziehe eine Datei hinein</p>
+          <p style="margin-top:4px;font-size:var(--text-xs);color:var(--color-text-faint)">Unterstützt: .txt, .md, Foto (jpg/png) mit lesbarem Text</p>
+        </div>
+        <input type="file" id="importFile" accept=".txt,.md,text/*,image/*" style="display:none" onchange="handleFileSelect(this)">
+        <div class="import-status" id="fileStatus"></div>
+        <div class="parse-preview" id="filePreview"></div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeImport()">Abbrechen</button>
+      <button class="btn btn-primary" id="importConfirmBtn" onclick="confirmImport()" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Als Rezept übernehmen
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ FORMULAR MODAL ═══ -->
 <div class="overlay" id="formOverlay" onclick="closeFormOnBg(event)">
@@ -525,48 +640,41 @@
 
 <script>
 // ════════════════════════════════════
-//  DATEN — localStorage
+//  DATEN
 // ════════════════════════════════════
 const STORE_KEY = 'rezeptbuch_v2';
 let alle = [];
 let bildBase64 = null;
+let parsedImport = null;
 
-function ladeDaten() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    alle = raw ? JSON.parse(raw) : [];
-  } catch { alle = []; }
+function ladeDaten(){
+  try{ const r=localStorage.getItem(STORE_KEY); alle=r?JSON.parse(r):[]; }catch{alle=[];}
 }
-function speichereDaten() {
-  localStorage.setItem(STORE_KEY, JSON.stringify(alle));
-  const b = document.getElementById('saveBadge');
+function speichereDaten(){
+  localStorage.setItem(STORE_KEY,JSON.stringify(alle));
+  const b=document.getElementById('saveBadge');
   b.classList.add('show');
   clearTimeout(b._t);
-  b._t = setTimeout(() => b.classList.remove('show'), 2000);
+  b._t=setTimeout(()=>b.classList.remove('show'),2000);
 }
-function nextId() {
-  return alle.length ? Math.max(...alle.map(r => r.id)) + 1 : 1;
-}
+function nextId(){ return alle.length?Math.max(...alle.map(r=>r.id))+1:1; }
 
 // ════════════════════════════════════
 //  EINHEITEN
 // ════════════════════════════════════
-const EINHEITEN = [
-  { gruppe: 'Volumen',    werte: ['ml','cl','dl','l','TL','EL','Tasse','Schuss'] },
-  { gruppe: 'Gewicht',    werte: ['g','kg','mg'] },
-  { gruppe: 'Stück',      werte: ['Stk.','Stück','Bund','Scheibe','Zehe','Blatt','Pck.','Dose','Glas','Becher','Flasche'] },
-  { gruppe: 'Gewürze',    werte: ['Prise','Msp.','TL','EL','nach Geschmack','etwas','1 Spritzer','wenig','reichlich'] },
-  { gruppe: 'Sonstiges',  werte: ['–', 'nach Bedarf'] },
+const EINHEITEN=[
+  {gruppe:'Volumen',   werte:['ml','cl','dl','l','TL','EL','Tasse','Schuss']},
+  {gruppe:'Gewicht',   werte:['g','kg','mg']},
+  {gruppe:'Stück',     werte:['Stk.','Stück','Bund','Scheibe','Zehe','Blatt','Pck.','Dose','Glas','Becher','Flasche']},
+  {gruppe:'Gewürze',   werte:['Prise','Msp.','TL','EL','nach Geschmack','etwas','1 Spritzer','wenig','reichlich']},
+  {gruppe:'Sonstiges', werte:['–','nach Bedarf']},
 ];
-
-function buildEinheitOptions(selected = '') {
-  let html = '<option value="">(Einheit)</option>';
-  EINHEITEN.forEach(g => {
-    html += `<optgroup label="${g.gruppe}">`;
-    g.werte.forEach(w => {
-      html += `<option${w === selected ? ' selected' : ''}>${w}</option>`;
-    });
-    html += '</optgroup>';
+function buildEinheitOptions(selected=''){
+  let html='<option value="">(Einheit)</option>';
+  EINHEITEN.forEach(g=>{
+    html+=`<optgroup label="${g.gruppe}">`;
+    g.werte.forEach(w=>{ html+=`<option${w===selected?' selected':''}>${w}</option>`; });
+    html+='</optgroup>';
   });
   return html;
 }
@@ -574,104 +682,65 @@ function buildEinheitOptions(selected = '') {
 // ════════════════════════════════════
 //  THEME
 // ════════════════════════════════════
-(function () {
-  const t = document.querySelector('[data-theme-toggle]');
-  const r = document.documentElement;
-  let d = matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
-  r.setAttribute('data-theme', d);
-  function updateIcon() {
-    if (!t) return;
-    t.innerHTML = d === 'dark'
-      ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
-      : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-  }
-  updateIcon();
-  t && t.addEventListener('click', () => {
-    d = d === 'dark' ? 'light' : 'dark';
-    r.setAttribute('data-theme', d);
-    updateIcon();
-  });
+(function(){
+  const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
+  let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+  r.setAttribute('data-theme',d);
+  function upd(){if(!t)return;t.innerHTML=d==='dark'
+    ?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+    :'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';}
+  upd();
+  t&&t.addEventListener('click',()=>{d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);upd();});
 })();
 
 // ════════════════════════════════════
 //  TOAST
 // ════════════════════════════════════
-function toast(msg, type = 'success') {
-  const w = document.getElementById('toastWrap');
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.textContent = msg;
-  w.appendChild(el);
-  setTimeout(() => el.remove(), 3200);
+function toast(msg,type='success'){
+  const w=document.getElementById('toastWrap'),el=document.createElement('div');
+  el.className=`toast ${type}`;el.textContent=msg;
+  w.appendChild(el);setTimeout(()=>el.remove(),3200);
 }
 
 // ════════════════════════════════════
 //  RENDER
 // ════════════════════════════════════
-function filterRezepte() {
-  const s = document.getElementById('searchInput').value.toLowerCase();
-  const k = document.getElementById('katFilter').value;
-  render(alle.filter(r =>
-    (!s || r.titel.toLowerCase().includes(s) || (r.notizen || '').toLowerCase().includes(s)) &&
-    (!k || r.kategorie === k)
-  ));
+function filterRezepte(){
+  const s=document.getElementById('searchInput').value.toLowerCase();
+  const k=document.getElementById('katFilter').value;
+  render(alle.filter(r=>(!s||r.titel.toLowerCase().includes(s)||(r.notizen||'').toLowerCase().includes(s))&&(!k||r.kategorie===k)));
 }
-
-function render(rezepte) {
-  document.getElementById('rezeptCount').textContent =
-    alle.length ? `${alle.length} Rezept${alle.length !== 1 ? 'e' : ''}` : '';
-
-  const g = document.getElementById('grid');
-  if (!rezepte.length) {
-    g.innerHTML = `<div class="empty" style="grid-column:1/-1">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
-        <rect x="9" y="3" width="6" height="4" rx="1"/>
-      </svg>
-      <h3>${alle.length ? 'Keine Treffer' : 'Noch keine Rezepte'}</h3>
-      <p>${alle.length ? 'Passe die Suche an oder wähle eine andere Kategorie.' : 'Erstelle jetzt dein erstes Rezept.'}</p>
-      ${!alle.length ? '<button class="btn btn-primary" onclick="openForm()">Erstes Rezept erstellen</button>' : ''}
+function render(rezepte){
+  document.getElementById('rezeptCount').textContent=alle.length?`${alle.length} Rezept${alle.length!==1?'e':''}`:
+  '';
+  const g=document.getElementById('grid');
+  if(!rezepte.length){
+    g.innerHTML=`<div class="empty" style="grid-column:1/-1">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      <h3>${alle.length?'Keine Treffer':'Noch keine Rezepte'}</h3>
+      <p>${alle.length?'Passe die Suche an oder wähle eine andere Kategorie.':'Erstelle jetzt dein erstes Rezept.'}</p>
+      ${!alle.length?'<button class="btn btn-primary" onclick="openForm()">Erstes Rezept erstellen</button>':''}
     </div>`;
     return;
   }
-
-  g.innerHTML = rezepte.map(r => {
-    const imgHtml = r.bild
-      ? `<img class="card-img" src="${r.bild}" alt="${esc(r.titel)}" loading="lazy" width="300" height="160">`
-      : `<div class="card-img-placeholder">
-           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-             <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
-           </svg>
-         </div>`;
+  g.innerHTML=rezepte.map(r=>{
+    const imgHtml=r.bild
+      ?`<img class="card-img" src="${r.bild}" alt="${esc(r.titel)}" loading="lazy" width="300" height="160">`
+      :`<div class="card-img-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>`;
     return `
     <article class="card" onclick="openDetail(${r.id})" tabindex="0" role="button" aria-label="${esc(r.titel)} öffnen">
       ${imgHtml}
       <div class="card-body">
-        <div class="card-header">
-          <h2 class="card-title">${esc(r.titel)}</h2>
-          <span class="badge">${esc(r.kategorie)}</span>
-        </div>
+        <div class="card-header"><h2 class="card-title">${esc(r.titel)}</h2><span class="badge">${esc(r.kategorie)}</span></div>
         <div class="card-meta">
-          <span class="meta-item">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            ${r.kochzeit} Min.
-          </span>
-          <span class="meta-item">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            ${r.portionen} Port.
-          </span>
+          <span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${r.kochzeit} Min.</span>
+          <span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${r.portionen} Port.</span>
           <span class="meta-item" style="margin-left:auto">${r.zutaten.length} Zutaten</span>
         </div>
-        ${r.schritte.length ? `<p class="card-preview">${esc(r.schritte[0])}</p>` : ''}
+        ${r.schritte.length?`<p class="card-preview">${esc(r.schritte[0])}</p>`:''}
         <div class="card-actions" onclick="event.stopPropagation()">
-          <button class="btn btn-ghost btn-sm" onclick="openEdit(${r.id})">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
-            Bearbeiten
-          </button>
-          <button class="btn btn-ghost btn-sm" style="color:var(--color-error)" onclick="deleteRezept(${r.id})">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            Löschen
-          </button>
+          <button class="btn btn-ghost btn-sm" onclick="openEdit(${r.id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>Bearbeiten</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--color-error)" onclick="deleteRezept(${r.id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>Löschen</button>
         </div>
       </div>
     </article>`;
@@ -681,199 +750,336 @@ function render(rezepte) {
 // ════════════════════════════════════
 //  DETAIL
 // ════════════════════════════════════
-function openDetail(id) {
-  const r = alle.find(x => x.id === id);
-  if (!r) return;
-  document.getElementById('dBadge').textContent = r.kategorie;
-  document.getElementById('dTitel').textContent = r.titel;
-
-  document.getElementById('dHeroWrap').innerHTML = r.bild
-    ? `<img class="detail-hero" src="${r.bild}" alt="${esc(r.titel)}" loading="lazy">`
-    : `<div class="detail-hero-placeholder">
-         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-           <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
-         </svg>
-       </div>`;
-
-  document.getElementById('dMeta').innerHTML = `
-    <span>⏱ ${r.kochzeit} Minuten</span>
-    <span>👥 ${r.portionen} Portionen</span>
-    <span>🥘 ${r.zutaten.length} Zutaten</span>
-    <span>📋 ${r.schritte.length} Schritte</span>`;
-
-  document.getElementById('dZutaten').innerHTML = r.zutaten.map(z => {
-    const mengeEinheit = [z.menge, z.einheit].filter(Boolean).join(' ');
-    return `<div class="zutat-item">
-      <span class="zutat-menge">${esc(mengeEinheit)}</span>
-      <span>${esc(z.name || z)}</span>
-    </div>`;
+function openDetail(id){
+  const r=alle.find(x=>x.id===id);if(!r)return;
+  document.getElementById('dBadge').textContent=r.kategorie;
+  document.getElementById('dTitel').textContent=r.titel;
+  document.getElementById('dHeroWrap').innerHTML=r.bild
+    ?`<img class="detail-hero" src="${r.bild}" alt="${esc(r.titel)}" loading="lazy">`
+    :`<div class="detail-hero-placeholder"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>`;
+  document.getElementById('dMeta').innerHTML=`<span>⏱ ${r.kochzeit} Minuten</span><span>👥 ${r.portionen} Portionen</span><span>🥘 ${r.zutaten.length} Zutaten</span><span>📋 ${r.schritte.length} Schritte</span>`;
+  document.getElementById('dZutaten').innerHTML=r.zutaten.map(z=>{
+    const me=[z.menge,z.einheit].filter(Boolean).join(' ');
+    return `<div class="zutat-item"><span class="zutat-menge">${esc(me)}</span><span>${esc(z.name||z)}</span></div>`;
   }).join('');
-
-  document.getElementById('dSchritte').innerHTML = r.schritte.map((s, i) =>
-    `<div class="schritt-item">
-      <div class="schritt-num">${i + 1}</div>
-      <p>${esc(s)}</p>
-    </div>`
-  ).join('');
-
-  const n = r.notizen && r.notizen.trim();
-  document.getElementById('dNotizenSection').style.display = n ? 'block' : 'none';
-  document.getElementById('dNotizen').textContent = n || '';
-  document.getElementById('dEditBtn').onclick = () => { closeDetail(); openEdit(id); };
-  document.getElementById('dDelBtn').onclick = () => deleteRezept(id);
-  document.getElementById('dPdfBtn').onclick = () => exportPdf(id);
+  document.getElementById('dSchritte').innerHTML=r.schritte.map((s,i)=>`<div class="schritt-item"><div class="schritt-num">${i+1}</div><p>${esc(s)}</p></div>`).join('');
+  const n=r.notizen&&r.notizen.trim();
+  document.getElementById('dNotizenSection').style.display=n?'block':'none';
+  document.getElementById('dNotizen').textContent=n||'';
+  document.getElementById('dEditBtn').onclick=()=>{closeDetail();openEdit(id);};
+  document.getElementById('dDelBtn').onclick=()=>deleteRezept(id);
+  document.getElementById('dPdfBtn').onclick=()=>exportPdf(id);
   document.getElementById('detailOverlay').classList.add('open');
 }
-function closeDetail() { document.getElementById('detailOverlay').classList.remove('open'); }
-function closeDetailOnBg(e) { if (e.target === document.getElementById('detailOverlay')) closeDetail(); }
+function closeDetail(){document.getElementById('detailOverlay').classList.remove('open');}
+function closeDetailOnBg(e){if(e.target===document.getElementById('detailOverlay'))closeDetail();}
 
 // ════════════════════════════════════
 //  PDF EXPORT
 // ════════════════════════════════════
-function exportPdf(id) {
-  const r = alle.find(x => x.id === id);
-  if (!r) return;
-
-  const datum = new Date(r.erstellt).toLocaleDateString('de-CH', { day: 'numeric', month: 'long', year: 'numeric' });
-
-  const zutatenRows = r.zutaten.map(z => {
-    const me = [z.menge, z.einheit].filter(Boolean).join('\u00a0');
-    return `<tr>
-      <td>${esc(me)}</td>
-      <td>${esc(z.name || z)}</td>
-    </tr>`;
+function exportPdf(id){
+  const r=alle.find(x=>x.id===id);if(!r)return;
+  const datum=new Date(r.erstellt).toLocaleDateString('de-CH',{day:'numeric',month:'long',year:'numeric'});
+  const zutatenRows=r.zutaten.map(z=>{
+    const me=[z.menge,z.einheit].filter(Boolean).join('\u00a0');
+    return `<tr><td>${esc(me)}</td><td>${esc(z.name||z)}</td></tr>`;
   }).join('');
+  const schritteHtml=r.schritte.map((s,i)=>`<div class="pdf-schritt"><div class="pdf-schritt-num">${i+1}</div><p>${esc(s)}</p></div>`).join('');
+  const bildHtml=r.bild?`<img class="pdf-hero" src="${r.bild}" alt="${esc(r.titel)}">`:'';
+  const notizenHtml=r.notizen?`<div style="margin-top:10pt"><div class="pdf-section-title">Notizen &amp; Tipps</div><div class="pdf-notizen">${esc(r.notizen)}</div></div>`:'';
 
-  const schritteHtml = r.schritte.map((s, i) => `
-    <div class="pdf-schritt">
-      <div class="pdf-schritt-num">${i + 1}</div>
-      <p>${esc(s)}</p>
-    </div>`).join('');
-
-  const bildHtml = r.bild
-    ? `<img class="pdf-hero" src="${r.bild}" alt="${esc(r.titel)}">`
-    : '';
-
-  const notizenHtml = r.notizen
-    ? `<div style="margin-top:14pt">
-         <div class="pdf-section-title">Notizen &amp; Tipps</div>
-         <div class="pdf-notizen">${esc(r.notizen)}</div>
-       </div>`
-    : '';
-
-  document.getElementById('pdfFrame').innerHTML = `
+  document.getElementById('pdfFrame').innerHTML=`
     <div class="pdf-header">
       <div class="pdf-rezeptname">${esc(r.titel)}</div>
       <div class="pdf-kategorie">${esc(r.kategorie)}</div>
     </div>
-
     <div class="pdf-meta-row">
       <div class="pdf-meta-item"><strong>⏱ Kochzeit</strong>&nbsp;&nbsp;${r.kochzeit} Min.</div>
       <div class="pdf-meta-item"><strong>👥 Portionen</strong>&nbsp;&nbsp;${r.portionen}</div>
       <div class="pdf-meta-item"><strong>📅 Erstellt</strong>&nbsp;&nbsp;${datum}</div>
     </div>
-
     ${bildHtml}
-
     <div class="pdf-cols">
       <div>
         <div class="pdf-section-title">Zutaten</div>
-        <table class="pdf-zutaten-table">
-          <tbody>${zutatenRows}</tbody>
-        </table>
+        <table class="pdf-zutaten-table"><tbody>${zutatenRows}</tbody></table>
       </div>
       <div>
         <div class="pdf-section-title">Zubereitung</div>
         ${schritteHtml}
       </div>
     </div>
-
     ${notizenHtml}
+    <div class="pdf-footer"><span>Rezeptbuch</span><span>${esc(r.titel)}</span></div>`;
 
-    <div class="pdf-footer">
-      <span>Rezeptbuch</span>
-      <span>${esc(r.titel)}</span>
-    </div>
-  `;
+  setTimeout(()=>window.print(),80);
+}
 
-  // Kurz warten, dann drucken
-  setTimeout(() => window.print(), 80);
+// ════════════════════════════════════
+//  IMPORT MODAL
+// ════════════════════════════════════
+function openImport(){
+  parsedImport=null;
+  document.getElementById('importText').value='';
+  document.getElementById('importFile').value='';
+  setImportStatus('text','','');
+  setImportStatus('file','','');
+  hidePreview('text');
+  hidePreview('file');
+  document.getElementById('importConfirmBtn').disabled=true;
+  switchTab('text');
+  document.getElementById('importOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('importText').focus(),60);
+}
+function closeImport(){document.getElementById('importOverlay').classList.remove('open');parsedImport=null;}
+function closeImportOnBg(e){if(e.target===document.getElementById('importOverlay'))closeImport();}
+
+function switchTab(tab){
+  document.getElementById('tabText').classList.toggle('active',tab==='text');
+  document.getElementById('tabFile').classList.toggle('active',tab==='file');
+  document.getElementById('panelText').classList.toggle('active',tab==='text');
+  document.getElementById('panelFile').classList.toggle('active',tab==='file');
+}
+
+function setImportStatus(panel,msg,type){
+  const el=document.getElementById(panel==='text'?'textStatus':'fileStatus');
+  el.textContent=msg;
+  el.className='import-status'+(msg?' show':'')+(type==='error'?' error':'');
+}
+function showPreview(panel,data){
+  const el=document.getElementById(panel==='text'?'textPreview':'filePreview');
+  const zList=data.zutaten.slice(0,5).map(z=>`<li>${[z.menge,z.einheit,z.name].filter(Boolean).join(' ')}</li>`).join('');
+  const mehr=data.zutaten.length>5?`<li>… +${data.zutaten.length-5} weitere</li>`:'';
+  el.innerHTML=`<h4>📋 ${esc(data.titel||'Kein Titel erkannt')}</h4>
+    <p style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:var(--space-2)">${data.zutaten.length} Zutaten · ${data.schritte.length} Schritte · ${data.kochzeit} Min. · ${data.portionen} Port.</p>
+    <ul>${zList}${mehr}</ul>`;
+  el.classList.add('show');
+}
+function hidePreview(panel){
+  document.getElementById(panel==='text'?'textPreview':'filePreview').classList.remove('show');
+}
+
+// ── Auto-Parse wenn Text eingegeben wird
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('importText').addEventListener('input', function(){
+    const txt=this.value.trim();
+    if(txt.length<20){parsedImport=null;document.getElementById('importConfirmBtn').disabled=true;hidePreview('text');setImportStatus('text','','');return;}
+    const parsed=parseRezeptText(txt);
+    parsedImport=parsed;
+    document.getElementById('importConfirmBtn').disabled=false;
+    setImportStatus('text','✅ Rezept erkannt – überprüfe die Vorschau','');
+    showPreview('text',parsed);
+  });
+});
+
+// ── Drag & Drop
+function handleDragOver(e){e.preventDefault();document.getElementById('importDrop').classList.add('dragover');}
+function handleDragLeave(){document.getElementById('importDrop').classList.remove('dragover');}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('importDrop').classList.remove('dragover');
+  const f=e.dataTransfer.files[0];
+  if(f)processImportFile(f);
+}
+function handleFileSelect(input){
+  if(input.files[0])processImportFile(input.files[0]);
+}
+
+function processImportFile(file){
+  setImportStatus('file','<span class="spinner"></span> Datei wird gelesen…','');
+  document.getElementById('fileStatus').innerHTML='<span class="spinner"></span> Datei wird gelesen…';
+  document.getElementById('fileStatus').className='import-status show';
+  hidePreview('file');
+
+  if(file.type.startsWith('image/')){
+    // Bild → Tesseract OCR
+    loadTesseract(()=>{
+      Tesseract.recognize(file,'deu',{logger:()=>{}}).then(({data:{text}})=>{
+        const parsed=parseRezeptText(text);
+        parsedImport=parsed;
+        document.getElementById('importConfirmBtn').disabled=false;
+        setImportStatus('file','✅ Text aus Bild erkannt','');
+        showPreview('file',parsed);
+      }).catch(()=>setImportStatus('file','❌ Bild konnte nicht gelesen werden. Versuche einen klareren Scan.','error'));
+    });
+  } else {
+    // .txt / .md
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const parsed=parseRezeptText(e.target.result);
+      parsedImport=parsed;
+      document.getElementById('importConfirmBtn').disabled=false;
+      setImportStatus('file','✅ Datei gelesen','');
+      showPreview('file',parsed);
+    };
+    reader.onerror=()=>setImportStatus('file','❌ Datei konnte nicht gelesen werden.','error');
+    reader.readAsText(file,'utf-8');
+  }
+}
+
+let tesseractLoaded=false;
+function loadTesseract(cb){
+  if(tesseractLoaded){cb();return;}
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+  s.onload=()=>{tesseractLoaded=true;cb();};
+  s.onerror=()=>setImportStatus('file','❌ OCR-Bibliothek konnte nicht geladen werden (Internet benötigt).','error');
+  document.head.appendChild(s);
+}
+
+// ── Rezepttext parsen
+function parseRezeptText(raw){
+  const lines=raw.split(/\n/).map(l=>l.trim()).filter(Boolean);
+  let titel='', kategorie='Sonstiges', portionen=4, kochzeit=30;
+  const zutaten=[], schritte=[], notizen=[];
+
+  // Titel: erste nicht-leere Zeile oder Zeile mit "Rezept" / Doppelpunkt am Ende
+  titel=lines[0]||'Importiertes Rezept';
+  // Nummer-Prefix entfernen (z.B. "1. Spaghetti")
+  titel=titel.replace(/^\d+\.?\s*/,'').replace(/:$/,'').trim();
+
+  // Kochzeit
+  const zeitMatch=raw.match(/(\d+)\s*(?:min(?:uten?)?|minutes?)/i);
+  if(zeitMatch)kochzeit=parseInt(zeitMatch[1]);
+
+  // Portionen
+  const portMatch=raw.match(/(?:für|f\.|portionen?|servings?)[^\d]*(\d+)/i);
+  if(portMatch)portionen=parseInt(portMatch[1]);
+
+  // Kategorie
+  const katMap={frühstück:'Frühstück',breakfast:'Frühstück',mittagessen:'Mittagessen',lunch:'Mittagessen',abendessen:'Abendessen',dinner:'Abendessen',dessert:'Dessert',kuchen:'Dessert',cake:'Dessert',snack:'Snacks',getränk:'Getränke',drink:'Getränke'};
+  const lc=raw.toLowerCase();
+  for(const[k,v]of Object.entries(katMap)){if(lc.includes(k)){kategorie=v;break;}}
+
+  // Sektionserkennung
+  const ZUTAT_SECTION=/zutaten?|ingredients?|benötig/i;
+  const SCHRITT_SECTION=/zubereitung|zubereiten|anleitung|schritte|method|preparation|so gehts|so geht/i;
+  const NOTIZ_SECTION=/notizen?|tipps?|hinweis|anmerkung/i;
+
+  let mode=''; // 'zutaten' | 'schritte' | 'notizen'
+  const einheitenRe=/^(\d[\d,./½¼¾]*)?\s*(ml|cl|dl|l|g|kg|mg|tl|el|stk\.?|stück|bund|scheibe|zehe|prise|msp\.?|tasse|glas|dose|becher|pck\.?|flasche|schuss)?\s+(.+)/i;
+  const stepRe=/^(\d+[\.\)]|[-•*→]|[①-⑳])\s*(.+)/;
+
+  for(let i=1;i<lines.length;i++){
+    const l=lines[i];
+    if(ZUTAT_SECTION.test(l)&&l.length<50){mode='zutaten';continue;}
+    if(SCHRITT_SECTION.test(l)&&l.length<50){mode='schritte';continue;}
+    if(NOTIZ_SECTION.test(l)&&l.length<50){mode='notizen';continue;}
+
+    if(mode==='zutaten'){
+      const m=l.match(einheitenRe);
+      if(m){
+        const einheitRaw=(m[2]||'').toLowerCase();
+        const einheitMap={tl:'TL',el:'EL',g:'g',kg:'kg',mg:'mg',ml:'ml',cl:'cl',dl:'dl',l:'l',stk:'Stk.','stk.':'Stk.',stück:'Stück',bund:'Bund',scheibe:'Scheibe',zehe:'Zehe',prise:'Prise','msp.':'Msp.',msp:'Msp.',tasse:'Tasse',glas:'Glas',dose:'Dose',becher:'Becher','pck.':'Pck.',pck:'Pck.',flasche:'Flasche',schuss:'Schuss'};
+        zutaten.push({menge:m[1]?m[1].trim():'',einheit:einheitMap[einheitRaw]||einheitRaw,name:m[3].trim()});
+      } else if(l.length>2&&l.length<80){
+        zutaten.push({menge:'',einheit:'',name:l});
+      }
+    } else if(mode==='schritte'){
+      const m=l.match(stepRe);
+      const text=m?m[2].trim():l;
+      if(text.length>5)schritte.push(text);
+    } else if(mode==='notizen'){
+      notizen.push(l);
+    } else {
+      // Heuristik: Zeile sieht aus wie Zutat?
+      const m=l.match(einheitenRe);
+      if(m&&zutaten.length<30){
+        zutaten.push({menge:m[1]?m[1].trim():'',einheit:m[2]||'',name:m[3].trim()});
+      }
+      // Zeile sieht aus wie Schritt (nummeriert)?
+      const sm=l.match(stepRe);
+      if(sm&&sm[2].length>10)schritte.push(sm[2].trim());
+    }
+  }
+
+  return{titel,kategorie,portionen,kochzeit,zutaten,schritte,notizen:notizen.join(' ')};
+}
+
+function confirmImport(){
+  if(!parsedImport)return;
+  closeImport();
+  openForm({
+    ...parsedImport,
+    id:null,
+    bild:null,
+    erstellt:new Date().toISOString()
+  });
+  toast('Rezept importiert – bitte überprüfen! ✏️');
 }
 
 // ════════════════════════════════════
 //  BILD VORSCHAU
 // ════════════════════════════════════
-function previewBild(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { toast('Bild max. 3 MB', 'error'); input.value = ''; return; }
-  const reader = new FileReader();
-  reader.onload = e => { bildBase64 = e.target.result; showImgPreview(bildBase64); };
+function previewBild(input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>3*1024*1024){toast('Bild max. 3 MB','error');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=e=>{bildBase64=e.target.result;showImgPreview(bildBase64);};
   reader.readAsDataURL(file);
 }
-function showImgPreview(src) {
-  const w = document.getElementById('imgPreviewWrap');
-  w.className = 'img-preview-wrap';
-  w.innerHTML = `<img class="img-preview" src="${src}" alt="Vorschau">
+function showImgPreview(src){
+  const w=document.getElementById('imgPreviewWrap');
+  w.className='img-preview-wrap';
+  w.innerHTML=`<img class="img-preview" src="${src}" alt="Vorschau">
     <button type="button" class="img-remove" onclick="clearBild()" aria-label="Bild entfernen">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>`;
 }
-function clearBild() {
-  bildBase64 = null;
-  document.getElementById('fBild').value = '';
-  const w = document.getElementById('imgPreviewWrap');
-  w.className = 'img-preview-placeholder';
-  w.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Bild auswählen oder hier ablegen</span>`;
+function clearBild(){
+  bildBase64=null;
+  document.getElementById('fBild').value='';
+  const w=document.getElementById('imgPreviewWrap');
+  w.className='img-preview-placeholder';
+  w.innerHTML=`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Bild auswählen oder hier ablegen</span>`;
 }
 
 // ════════════════════════════════════
 //  FORMULAR
 // ════════════════════════════════════
-function openForm(data = null) {
-  bildBase64 = data ? (data.bild || null) : null;
-  document.getElementById('editId').value = data ? data.id : '';
-  document.getElementById('modalTitle').textContent = data ? 'Rezept bearbeiten' : 'Neues Rezept';
-  document.getElementById('fTitel').value = data ? data.titel : '';
-  document.getElementById('fKat').value = data ? data.kategorie : 'Abendessen';
-  document.getElementById('fPortionen').value = data ? data.portionen : 2;
-  document.getElementById('fZeit').value = data ? data.kochzeit : 30;
-  document.getElementById('fNotizen').value = data ? (data.notizen || '') : '';
-  document.getElementById('fBild').value = '';
-  if (bildBase64) showImgPreview(bildBase64); else clearBild();
+function openForm(data=null){
+  bildBase64=data?(data.bild||null):null;
+  document.getElementById('editId').value=data&&data.id?data.id:'';
+  document.getElementById('modalTitle').textContent=data&&data.id?'Rezept bearbeiten':'Neues Rezept';
+  document.getElementById('fTitel').value=data?data.titel:'';
+  document.getElementById('fKat').value=data?data.kategorie:'Abendessen';
+  document.getElementById('fPortionen').value=data?data.portionen:2;
+  document.getElementById('fZeit').value=data?data.kochzeit:30;
+  document.getElementById('fNotizen').value=data?(data.notizen||'):'';
+  document.getElementById('fBild').value='';
+  if(bildBase64)showImgPreview(bildBase64);else clearBild();
 
-  const zl = document.getElementById('zutatenList'); zl.innerHTML = '';
-  const initZutaten = data ? data.zutaten : [{ menge: '', einheit: '', name: '' }];
-  initZutaten.forEach(z => addZutat(z));
+  const zl=document.getElementById('zutatenList');zl.innerHTML='';
+  const initZ=data&&data.zutaten&&data.zutaten.length?data.zutaten:[{menge:'',einheit:'',name:''}];
+  initZ.forEach(z=>addZutat(z));
 
-  const sl = document.getElementById('schritteList'); sl.innerHTML = '';
-  const initSchritte = data ? data.schritte : [''];
-  initSchritte.forEach(s => addSchritt(s));
+  const sl=document.getElementById('schritteList');sl.innerHTML='';
+  const initS=data&&data.schritte&&data.schritte.length?data.schritte:[''];
+  initS.forEach(s=>addSchritt(s));
 
   document.getElementById('formOverlay').classList.add('open');
-  setTimeout(() => document.getElementById('fTitel').focus(), 60);
+  setTimeout(()=>document.getElementById('fTitel').focus(),60);
 }
-function openEdit(id) { const r = alle.find(x => x.id === id); if (r) openForm(r); }
-function closeForm() { document.getElementById('formOverlay').classList.remove('open'); bildBase64 = null; }
-function closeFormOnBg(e) { if (e.target === document.getElementById('formOverlay')) closeForm(); }
+function openEdit(id){const r=alle.find(x=>x.id===id);if(r)openForm(r);}
+function closeForm(){document.getElementById('formOverlay').classList.remove('open');bildBase64=null;}
+function closeFormOnBg(e){if(e.target===document.getElementById('formOverlay'))closeForm();}
 
-function addZutat(z = {}) {
-  const row = document.createElement('div'); row.className = 'zutat-row';
-  row.innerHTML = `
-    <input type="text" placeholder="200" value="${esc(z.menge || '')}" aria-label="Menge">
-    <select class="einheit-sel" aria-label="Einheit">${buildEinheitOptions(z.einheit || '')}</select>
-    <input type="text" placeholder="z.B. Mehl" value="${esc(z.name || '')}" aria-label="Zutat">
+function addZutat(z={}){
+  const row=document.createElement('div');row.className='zutat-row';
+  row.innerHTML=`
+    <input type="text" placeholder="200" value="${esc(z.menge||'')}" aria-label="Menge">
+    <select class="einheit-sel" aria-label="Einheit">${buildEinheitOptions(z.einheit||'')}</select>
+    <input type="text" placeholder="z.B. Mehl" value="${esc(z.name||'')}" aria-label="Zutat">
     <button type="button" class="del-btn" onclick="this.closest('.zutat-row').remove()" aria-label="Entfernen">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>`;
   document.getElementById('zutatenList').appendChild(row);
 }
-
-function addSchritt(text = '') {
-  const list = document.getElementById('schritteList');
-  const num = list.children.length + 1;
-  const row = document.createElement('div'); row.className = 'schritt-row';
-  row.innerHTML = `
+function addSchritt(text=''){
+  const list=document.getElementById('schritteList');
+  const num=list.children.length+1;
+  const row=document.createElement('div');row.className='schritt-row';
+  row.innerHTML=`
     <div class="schritt-num">${num}</div>
     <textarea placeholder="Schritt beschreiben…" rows="2">${esc(text)}</textarea>
     <button type="button" class="del-btn" onclick="removeSchritt(this)" aria-label="Entfernen" style="margin-top:5px">
@@ -881,57 +1087,45 @@ function addSchritt(text = '') {
     </button>`;
   list.appendChild(row);
 }
-function removeSchritt(btn) {
+function removeSchritt(btn){
   btn.closest('.schritt-row').remove();
-  document.querySelectorAll('#schritteList .schritt-num').forEach((el, i) => el.textContent = i + 1);
+  document.querySelectorAll('#schritteList .schritt-num').forEach((el,i)=>el.textContent=i+1);
 }
 
 // ════════════════════════════════════
 //  SPEICHERN / LÖSCHEN
 // ════════════════════════════════════
-function saveRezept() {
-  const titel = document.getElementById('fTitel').value.trim();
-  if (!titel) { toast('Bitte einen Titel angeben.', 'error'); document.getElementById('fTitel').focus(); return; }
-
-  const zutaten = [...document.querySelectorAll('#zutatenList .zutat-row')].map(row => {
-    const inputs = row.querySelectorAll('input[type=text]');
-    const sel = row.querySelector('select');
-    return { menge: inputs[0].value.trim(), einheit: sel ? sel.value : '', name: inputs[1].value.trim() };
-  }).filter(z => z.name);
-
-  const schritte = [...document.querySelectorAll('#schritteList textarea')]
-    .map(t => t.value.trim()).filter(Boolean);
-
-  const id = document.getElementById('editId').value;
-  const rezept = {
-    id: id ? Number(id) : nextId(),
+function saveRezept(){
+  const titel=document.getElementById('fTitel').value.trim();
+  if(!titel){toast('Bitte einen Titel angeben.','error');document.getElementById('fTitel').focus();return;}
+  const zutaten=[...document.querySelectorAll('#zutatenList .zutat-row')].map(row=>{
+    const inputs=row.querySelectorAll('input[type=text]');
+    const sel=row.querySelector('select');
+    return{menge:inputs[0].value.trim(),einheit:sel?sel.value:'',name:inputs[1].value.trim()};
+  }).filter(z=>z.name);
+  const schritte=[...document.querySelectorAll('#schritteList textarea')].map(t=>t.value.trim()).filter(Boolean);
+  const id=document.getElementById('editId').value;
+  const rezept={
+    id:id?Number(id):nextId(),
     titel,
-    kategorie: document.getElementById('fKat').value,
-    portionen: +document.getElementById('fPortionen').value || 2,
-    kochzeit: +document.getElementById('fZeit').value || 30,
-    zutaten,
-    schritte,
-    notizen: document.getElementById('fNotizen').value.trim(),
-    bild: bildBase64 || null,
-    erstellt: id ? (alle.find(r => r.id === Number(id))?.erstellt || new Date().toISOString()) : new Date().toISOString(),
+    kategorie:document.getElementById('fKat').value,
+    portionen:+document.getElementById('fPortionen').value||2,
+    kochzeit:+document.getElementById('fZeit').value||30,
+    zutaten,schritte,
+    notizen:document.getElementById('fNotizen').value.trim(),
+    bild:bildBase64||null,
+    erstellt:id?(alle.find(r=>r.id===Number(id))?.erstellt||new Date().toISOString()):new Date().toISOString(),
   };
-
-  if (id) {
-    const idx = alle.findIndex(r => r.id === Number(id));
-    if (idx !== -1) alle[idx] = rezept;
-  } else {
-    alle.unshift(rezept);
-  }
-
+  if(id){const idx=alle.findIndex(r=>r.id===Number(id));if(idx!==-1)alle[idx]=rezept;}
+  else alle.unshift(rezept);
   speichereDaten();
-  toast(id ? 'Rezept aktualisiert! ✏️' : 'Rezept gespeichert! 🎉');
+  toast(id?'Rezept aktualisiert! ✏️':'Rezept gespeichert! 🎉');
   closeForm();
   filterRezepte();
 }
-
-function deleteRezept(id) {
-  if (!confirm('Rezept wirklich löschen?')) return;
-  alle = alle.filter(r => r.id !== id);
+function deleteRezept(id){
+  if(!confirm('Rezept wirklich löschen?'))return;
+  alle=alle.filter(r=>r.id!==id);
   speichereDaten();
   toast('Rezept gelöscht.');
   closeDetail();
@@ -941,19 +1135,9 @@ function deleteRezept(id) {
 // ════════════════════════════════════
 //  HILFSFUNKTIONEN
 // ════════════════════════════════════
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = String(s || '');
-  return d.innerHTML;
-}
+function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeImport();closeForm();closeDetail();}});
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeForm(); closeDetail(); }
-});
-
-// ════════════════════════════════════
-//  START
-// ════════════════════════════════════
 ladeDaten();
 filterRezepte();
 </script>
